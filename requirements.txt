@@ -1,2 +1,6 @@
-
-reflex==0.6.3
+reflex==0.6.4
+python-dotenv
+cryptography
+bcrypt==4.0.1
+sqlalchemy==2.0.41
+reflex-ag-grid

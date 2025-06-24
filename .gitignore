@@ -1,30 +1,117 @@
-# Entornos virtuales
-venv/
-.venv/
-env/
-.env/
-
-# Archivos de base de datos de desarrollo
+!.env.example
+# ========================================
+# ARCHIVOS DE SEGURIDAD Y SECRETOS
+# ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# BACKUPS Y ARCHIVOS ANTIGUOS
+# BASES DE DATOS Y ARCHIVOS DE DATOS
+# DOCKER
+# EDITORES E IDEs
+# ENTORNOS VIRTUALES
+# LOGS Y TEMPORALES
+# NODE.JS Y FRONTEND
+# PYTHON
+# REFLEX ESPECÍFICOS
+# SISTEMA OPERATIVO
+*.backup
+*.bak
+*.cover
 *.db
-*.sqlite3
-
-# Archivos de configuración y secretos
-.env
-*.env
-rxconfig.local.py
-
-# Directorios de compilación y caché de Reflex
-.web/
-
-# Archivos de Python
-__pycache__/
+*.dockerfile.local
+*.dump
+*.key
+*.log
+*.ods
+*.old
+*.orig
+*.p12
+*.pem
+*.pfx
 *.py[cod]
+*.pyd
 *.pyo
-
-# Archivos del sistema operativo y editores
+*.so
+*.sql
+*.sqlite
+*.sqlite3
+*.state
+*.sublime-project
+*.sublime-workspace
+*.swo
+*.swp
+*.temp
+*.tmp
+*~
 .DS_Store
-.vscode/
+.DS_Store?
+.Python
+.Spotlight-V100
+.Trashes
+._*
+.bun/
+.cache
+.coverage
+.directory
+.dmypy.json
+.dockerignore.local
+.env
+.env.*
+.env.development
+.env.local
+.env.production
+.env.staging
+.env/
+.hypothesis/
 .idea/
-
-# Recursos externos que no deben estar en el repo
-# assets/external/ # Descomentar si no quieres versionar estos assets
+.local/
+.metadata
+.mypy_cache/
+.npm/
+.pnpm-debug.log*
+.project
+.pytest_cache/
+.reflex/
+.secrets
+.settings/
+.states
+.tmp/
+.tox/
+.venv/
+.vscode-server/
+.vscode/
+.web
+.web/
+.yarn/
+Datos*.ods
+ENV/
+Thumbs.db
+__pycache__/
+assets/external/
+bun.lockb
+config/secrets/
+coverage.xml
+database.db
+debug_*
+dmypy.json
+docker-compose.override.yml
+ehthumbs.db
+env.bak/
+env/
+htmlcov/
+log/
+logs/
+node_modules/
+nosetests.xml
+npm-debug.log*
+package-lock.json
+pyvenv.cfg
+reflex.db
+rxconfig.local.py
+secrets/
+temp_*
+test_*
+tmp/
+venv.bak/
+venv/
+yarn-debug.log*
+yarn-error.log*
+yarn.lock

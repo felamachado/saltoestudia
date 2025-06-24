@@ -1,0 +1,24 @@
+services:
+  #--- Servicio de la Aplicación Reflex ---#
+  app:
+    build: .
+    container_name: saltoestudia-app
+    ports:
+      - "3000:3000" # Frontend (lo que ves en el navegador)
+      - "8000:8000" # Backend
+    volumes:
+      # Monta tu código local en el contenedor para desarrollo en vivo (hot-reloading)
+      - .:/app
+      - app_data:/app/data
+    environment:
+      - DATABASE_URL=sqlite:///data/saltoestudia.db
+      - DEFAULT_SEED_PASSWORD=admin_pass
+      - CENUR_PASSWORD=cenur_pass
+      - IAE_PASSWORD=iae_pass
+      - CATALINA_PASSWORD=catalina_pass
+      - ADMINISTRACION_PASSWORD=admin_pass
+      - AGRARIA_PASSWORD=agraria_pass
+    command: ["reflex", "run"]
+
+volumes:
+  app_data:
