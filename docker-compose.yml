@@ -9,7 +9,7 @@ services:
     volumes:
       # Monta tu código local en el contenedor para desarrollo en vivo (hot-reloading)
       - .:/app
-      - app_data:/app/data
+      - ./data:/app/data
     environment:
       - DATABASE_URL=sqlite:///data/saltoestudia.db
       - DEFAULT_SEED_PASSWORD=admin_pass
@@ -19,6 +19,3 @@ services:
       - ADMINISTRACION_PASSWORD=admin_pass
       - AGRARIA_PASSWORD=agraria_pass
     command: ["reflex", "run"]
-
-volumes:
-  app_data:
