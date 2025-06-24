@@ -1,4 +1,35 @@
-# saltoestudia/state.py
+# ================================================================================
+# GESTIÓN DE ESTADO GLOBAL - SALTO ESTUDIA
+# ================================================================================
+#
+# Este archivo es el NÚCLEO del sistema de gestión de estado reactivo.
+# Implementa el patrón State Management de Reflex para manejar toda la lógica
+# de negocio, autenticación, filtros y operaciones CRUD.
+#
+# ARQUITECTURA DE ESTADO:
+# - State: Clase principal que hereda de rx.State (singleton global)
+# - User: Modelo seguro para usuarios autenticados (sin contraseñas)
+# - Estados por funcionalidad: cursos, instituciones, admin, auth
+#
+# RESPONSABILIDADES PRINCIPALES:
+# 1. AUTENTICACIÓN: Login/logout con validación de credenciales
+# 2. FILTROS PÚBLICOS: Búsqueda de cursos con múltiples criterios
+# 3. ADMIN CRUD: Gestión de cursos por institución (usuarios autenticados)
+# 4. NAVEGACIÓN: Control de flujos y redirecciones
+# 5. UI STATE: Estados de modales, diálogos y componentes interactivos
+#
+# PATRONES IMPLEMENTADOS:
+# - Reactive State: Cambios automáticos en UI cuando cambia el estado
+# - Session Management: Gestión de sesión de usuario sin cookies
+# - Data Loading: Carga lazy y eager según necesidades
+# - Error Handling: Manejo robusto de errores con fallbacks
+# - Security: Aislamiento de datos por institución
+#
+# CONEXIÓN CON OTROS ARCHIVOS:
+# - database.py: Para todas las operaciones de persistencia
+# - constants.py: Para validaciones y opciones de formularios
+# - pages/*.py: Las páginas consumen y modifican este estado
+# ================================================================================
 
 import reflex as rx
 import bcrypt
@@ -17,39 +48,140 @@ from .database import (
 from .models import Usuario
 from .constants import CursosConstants
 
+# ================================================================================
+# MODELO DE USUARIO SEGURO PARA ESTADO
+# ================================================================================
+
 class User(rx.Base):
-    """Modelo de usuario seguro para el estado de Reflex."""
-    id: int
-    correo: str
-    institucion_id: int
-    institucion_nombre: str
+    """
+    Modelo de usuario seguro para el estado de Reflex.
+    
+    Esta clase define la estructura de datos del usuario autenticado
+    que se almacena en el estado global. Excluye información sensible
+    como contraseñas y solo mantiene datos necesarios para la UI.
+    
+    CAMPOS:
+    - id: ID único del usuario en la base de datos
+    - correo: Email del usuario (usado para mostrar en UI)
+    - institucion_id: ID de la institución a la que pertenece
+    - institucion_nombre: Nombre de la institución (para mostrar en UI)
+    
+    SEGURIDAD:
+    - NO incluye password_hash ni información sensible
+    - Solo datos necesarios para autorización y UI
+    - Se reconstruye en cada login desde database.py
+    
+    UTILIZADO EN:
+    - State.logged_in_user: Usuario actualmente autenticado
+    - Verificaciones de permisos en páginas protegidas
+    - Mostrar información contextual en UI admin
+    """
+    id: int                      # ID único del usuario
+    correo: str                  # Email para mostrar en UI
+    institucion_id: int          # ID de institución para filtros CRUD
+    institucion_nombre: str      # Nombre para mostrar en header admin
+
+# ================================================================================
+# CLASE PRINCIPAL DE ESTADO GLOBAL
+# ================================================================================
 
 class State(rx.State):
-    cursos: List[Dict[str, Any]] = []
-    cursos_originales: List[Dict[str, Any]] = []  # Nueva variable para almacenar todos los cursos
-    instituciones_nombres : List[str] = []
-    nivel_seleccionado: str = ""
-    duracion_seleccionada: str = ""
-    requisito_seleccionado: str = ""
-    institucion_seleccionada: str = ""
-    tabla_cursos_data: List[List[Any]] = []
-
-    instituciones_info: List[Dict[str, Any]] = []
-    is_dialog_open: bool = False
-    selected_institution: Dict[str, Any] = {}
-
-    # NUEVO: Variable para la lógica responsiva. Soluciona el AttributeError.
-    is_mobile: bool = False
-
-    show_login_dialog: bool = False
-    login_correo: str = ""
-    login_password: str = ""
-    login_error: str = ""
-    logged_in_user: Optional[User] = None
-
-    # Variables para manejo de redirección después del login
-    redirect_url: str = ""
-    user_authenticated: bool = False
+    """
+    Clase principal de gestión de estado global del sistema Salto Estudia.
+    
+    Esta clase centraliza TODA la lógica de negocio del sistema y define
+    los datos reactivos que automáticamente actualizan la UI cuando cambian.
+    
+    ORGANIZACIÓN POR FUNCIONALIDADES:
+    1. CURSOS PÚBLICOS: Búsqueda y filtrado para usuarios no autenticados
+    2. INSTITUCIONES: Galería y información de instituciones educativas  
+    3. AUTENTICACIÓN: Login, logout y gestión de sesión
+    4. ADMIN CRUD: Operaciones de cursos para usuarios autenticados
+    5. UI CONTROL: Estados de modales, diálogos y componentes
+    
+    PATRÓN REACTIVO:
+    - Cualquier cambio en estas variables automáticamente actualiza la UI
+    - No se requiere refrescar la página manualmente
+    - Los componentes se suscriben automáticamente a los cambios
+    
+    THREAD SAFETY:
+    - Reflex garantiza thread safety para todas las operaciones de estado
+    - Cada usuario tiene su propia instancia de estado
+    - No hay conflictos entre sesiones de usuarios diferentes
+    """
+    # ================================================================================
+    # VARIABLES DE ESTADO - FUNCIONALIDAD CURSOS PÚBLICOS
+    # ================================================================================
+    
+    # === DATOS DE CURSOS ===
+    cursos: List[Dict[str, Any]] = []                    # Cursos filtrados mostrados en UI
+    cursos_originales: List[Dict[str, Any]] = []         # Todos los cursos sin filtrar (cache)
+    tabla_cursos_data: List[List[Any]] = []              # Formato tabla para compatibilidad legacy
+    
+    # === FILTROS DE BÚSQUEDA ===
+    # Estos filtros se aplican en tiempo real en la página /cursos
+    nivel_seleccionado: str = ""                         # Filtro por nivel educativo
+    duracion_seleccionada: str = ""                      # Filtro por duración (no implementado completamente)
+    requisito_seleccionado: str = ""                     # Filtro por requisitos de ingreso
+    institucion_seleccionada: str = ""                   # Filtro por institución
+    
+    # === DATOS DE INSTITUCIONES ===
+    instituciones_nombres: List[str] = []                # Lista de nombres para filtro dropdown
+    instituciones_info: List[Dict[str, Any]] = []        # Datos completos para galería
+    
+    # === UI CONTROL - MODAL DE INSTITUCIONES ===
+    is_dialog_open: bool = False                         # Control modal detalle institución
+    selected_institution: Dict[str, Any] = {}           # Institución seleccionada en modal
+    
+    # === RESPONSIVE DESIGN ===
+    is_mobile: bool = False                              # Detector de dispositivos móviles
+    
+    # ================================================================================
+    # VARIABLES DE ESTADO - FUNCIONALIDAD AUTENTICACIÓN
+    # ================================================================================
+    
+    # === MODAL LOGIN (desde header) ===
+    show_login_dialog: bool = False                      # Control modal login en header
+    login_correo: str = ""                               # Campo email del formulario
+    login_password: str = ""                             # Campo contraseña del formulario
+    login_error: str = ""                                # Mensaje de error de autenticación
+    
+    # === SESIÓN DE USUARIO ===
+    logged_in_user: Optional[User] = None                # Usuario autenticado actual
+    user_authenticated: bool = False                     # Flag adicional de autenticación
+    redirect_url: str = ""                               # URL para redirigir post-login
+    
+    # ================================================================================
+    # VARIABLES DE ESTADO - FUNCIONALIDAD ADMIN CRUD
+    # ================================================================================
+    
+    # === DATOS ADMIN ===
+    admin_cursos: List[Dict[str, Any]] = []              # Cursos de la institución del admin
+    
+    # === UI CONTROL - FORMULARIO CURSOS ===
+    show_curso_dialog: bool = False                      # Control modal formulario curso
+    is_editing: bool = False                             # Modo edición vs creación
+    curso_a_editar: Dict[str, Any] = {}                  # Datos del curso en edición
+    
+    # === UI CONTROL - CONFIRMACIÓN ELIMINAR ===
+    show_delete_alert: bool = False                      # Control modal confirmación
+    curso_a_eliminar_id: int = -1                        # ID del curso a eliminar
+    
+    # === CAMPOS DEL FORMULARIO CURSO ===
+    # Campos individuales para binding directo con inputs del formulario
+    form_nombre: str = ""                                # Campo nombre del curso
+    form_nivel: str = ""                                 # Campo nivel educativo
+    form_duracion_numero: str = ""                       # Campo duración numérica
+    form_duracion_unidad: str = ""                       # Campo unidad de tiempo
+    form_requisitos_ingreso: str = ""                    # Campo requisitos previos
+    form_informacion: str = ""                           # Campo información adicional
+    
+    # === OPCIONES PARA DROPDOWNS ===
+    # Estas opciones se cargan desde constants.py y se usan en formularios
+    opciones_nivel: List[str] = CursosConstants.NIVELES                    # ["Bachillerato", "Terciario", ...]
+    opciones_requisitos: List[str] = CursosConstants.REQUISITOS_INGRESO    # ["Ciclo básico", "Bachillerato", ...]
+    opciones_duracion_numero: List[str] = CursosConstants.DURACIONES_NUMEROS  # ["1", "2", ..., "12"]
+    opciones_duracion_unidad: List[str] = CursosConstants.DURACIONES_UNIDADES # ["meses", "años"]
 
     def cargar_cursos(self):
         """Carga todos los cursos desde la base de datos."""
@@ -256,27 +388,6 @@ class State(rx.State):
             self.set_redirect_url(path)
             return rx.redirect("/login")
         return None
-
-    admin_cursos: List[Dict[str, Any]] = []
-    show_curso_dialog: bool = False
-    is_editing: bool = False
-    curso_a_editar: Dict[str, Any] = {}
-    show_delete_alert: bool = False
-    curso_a_eliminar_id: int = -1
-
-    # Campos individuales del formulario para edición
-    form_nombre: str = ""
-    form_nivel: str = ""
-    form_duracion_numero: str = ""
-    form_duracion_unidad: str = ""
-    form_requisitos_ingreso: str = ""
-    form_informacion: str = ""
-
-    # Usar constantes hardcodeadas
-    opciones_nivel: List[str] = CursosConstants.NIVELES
-    opciones_requisitos: List[str] = CursosConstants.REQUISITOS_INGRESO
-    opciones_duracion_numero: List[str] = CursosConstants.DURACIONES_NUMEROS
-    opciones_duracion_unidad: List[str] = CursosConstants.DURACIONES_UNIDADES
 
     def set_form_nombre(self, value: str):
         self.form_nombre = value

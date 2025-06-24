@@ -1,21 +1,63 @@
-# saltoestudia.py
+# ================================================================================
+# ARCHIVO PRINCIPAL DE LA APLICACIÓN SALTO ESTUDIA
+# ================================================================================
+# 
+# Este archivo es el punto de entrada principal del sistema Salto Estudia.
+# Define la configuración global de la aplicación Reflex y gestiona las importaciones
+# de todas las páginas del sistema.
+#
+# FUNCIONAMIENTO:
+# - Configura la aplicación Reflex con estilos Bootstrap
+# - Las páginas se registran automáticamente mediante el decorador @rx.page
+# - No es necesario llamar a app.add_page() manualmente
+#
+# ARQUITECTURA DEL SISTEMA:
+# - Frontend: Reflex (Python → React) con Bootstrap CSS
+# - Backend: SQLModel + SQLite para persistencia
+# - Autenticación: bcrypt para hash de contraseñas
+# - Estado: Reflex State management para UI reactiva
+# ================================================================================
 
 import reflex as rx
-# Importar páginas principales
-from .pages.index import index
-from .pages.instituciones import instituciones
-from .pages.cursos import cursos
-from .pages.info import info
-from .pages.admin import admin_page
-from .pages.login import login_page
+
+# === IMPORTACIONES DE PÁGINAS ===
+# Al importar estas páginas, se registran automáticamente en la aplicación
+# gracias al decorador @rx.page que contienen
+from .pages.index import index              # Página de inicio con información del proyecto
+from .pages.instituciones import instituciones  # Galería de instituciones educativas
+from .pages.cursos import cursos            # Buscador de cursos con filtros
+from .pages.info import info                # Información adicional del proyecto
+from .pages.admin import admin_page         # Panel de administración (requiere login)
+from .pages.login import login_page         # Página de inicio de sesión
+
+# === IMPORTACIONES DE MODELOS ===
+# Importar modelos para que SQLModel los reconozca y cree las tablas
 from . import models
 
-# Configuración original con Bootstrap CSS
+# === CONFIGURACIÓN DE LA APLICACIÓN ===
+# Configuración principal de Reflex con Bootstrap CSS para estilos base
+# Bootstrap proporciona componentes responsivos y estilos consistentes
 app = rx.App(
     stylesheets=["https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"]
 )
 
-# NO es necesario llamar a app.add_page() para las páginas que usan el decorador @rx.page.
-# El decorador ya las registra automáticamente. Al llamar a add_page de nuevo,
-# se genera la advertencia "redefined with the same component".
-# Simplemente con importar las páginas arriba es suficiente.
+# === REGISTRO AUTOMÁTICO DE PÁGINAS ===
+# IMPORTANTE: NO es necesario llamar a app.add_page() para las páginas que usan 
+# el decorador @rx.page. El decorador ya las registra automáticamente.
+# 
+# Intentar registrarlas manualmente generaría la advertencia:
+# "redefined with the same component"
+#
+# Las páginas se registran con estas rutas:
+# - / → index (página de inicio)
+# - /instituciones → galería de instituciones
+# - /cursos → buscador de cursos con filtros
+# - /info → información del proyecto
+# - /admin → panel administrativo (protegido)
+# - /login → formulario de inicio de sesión
+#
+# FLUJO DE NAVEGACIÓN:
+# 1. Usuario accede a / (inicio)
+# 2. Puede navegar a /instituciones o /cursos sin autenticación
+# 3. Para acceder a /admin debe autenticarse en /login
+# 4. Una vez autenticado, puede gestionar cursos de su institución

@@ -1,117 +1,171 @@
-!.env.example
 # ========================================
-# ARCHIVOS DE SEGURIDAD Y SECRETOS
-# ARCHIVOS ESPECÍFICOS DEL PROYECTO
-# BACKUPS Y ARCHIVOS ANTIGUOS
-# BASES DE DATOS Y ARCHIVOS DE DATOS
-# DOCKER
-# EDITORES E IDEs
-# ENTORNOS VIRTUALES
-# LOGS Y TEMPORALES
-# NODE.JS Y FRONTEND
-# PYTHON
-# REFLEX ESPECÍFICOS
-# SISTEMA OPERATIVO
+# GITIGNORE PARA SALTO ESTUDIA - MÁXIMA SEGURIDAD
+# ========================================
+
+# ========================================
+# 🔒 ARCHIVOS CRÍTICOS DE SEGURIDAD
+# ========================================
+.env
+.env.*
+!.env.example
+.secrets
+secrets/
+config/secrets/
+*.key
+*.pem
+*.p12
+*.pfx
+credential*
+*secret*
+*password*
+auth.json
+token.json
+
+# ========================================
+# 🗄️ BASES DE DATOS Y ARCHIVOS DE DATOS
+# ========================================
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+database.db
+reflex.db
+data/*.db
+data/*.sqlite*
+*.dump
 *.backup
 *.bak
-*.cover
-*.db
+
+# ========================================
+# 🐳 DOCKER Y CONTENEDORES
+# ========================================
+.dockerignore.local
 *.dockerfile.local
-*.dump
-*.key
+docker-compose.override.yml
+
+# ========================================
+# 🐍 PYTHON
+# ========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ========================================
+# 🌐 NODE.JS Y FRONTEND
+# ========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+package-lock.json
+yarn.lock
+bun.lockb
+.npm/
+.yarn/
+.bun/
+
+# ========================================
+# 🚀 REFLEX ESPECÍFICOS
+# ========================================
+.web/
+.reflex/
+.states
+*.state
+rxconfig.local.py
+
+# ========================================
+# 🔧 ENTORNOS VIRTUALES
+# ========================================
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+pyvenv.cfg
+
+# ========================================
+# 📝 LOGS Y ARCHIVOS TEMPORALES
+# ========================================
 *.log
+logs/
+log/
+*.tmp
+*.temp
+.tmp/
+temp_*
+debug_*
+.cache
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+.pytest_cache/
+.hypothesis/
+.mypy_cache/
+dmypy.json
+.dmypy.json
+
+# ========================================
+# 💻 EDITORES E IDEs
+# ========================================
+.vscode/
+.vscode-server/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.project
+.metadata
+.settings/
+.directory
+
+# ========================================
+# 🖥️ SISTEMA OPERATIVO
+# ========================================
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+.Spotlight-V100
+.Trashes
+
+# ========================================
+# 📋 ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# ========================================
+Datos*.ods
 *.ods
 *.old
 *.orig
-*.p12
-*.pem
-*.pfx
-*.py[cod]
-*.pyd
-*.pyo
-*.so
-*.sql
-*.sqlite
-*.sqlite3
-*.state
-*.sublime-project
-*.sublime-workspace
-*.swo
-*.swp
-*.temp
-*.tmp
-*~
-.DS_Store
-.DS_Store?
-.Python
-.Spotlight-V100
-.Trashes
-._*
-.bun/
-.cache
-.coverage
-.directory
-.dmypy.json
-.dockerignore.local
-.env
-.env.*
-.env.development
-.env.local
-.env.production
-.env.staging
-.env/
-.hypothesis/
-.idea/
-.local/
-.metadata
-.mypy_cache/
-.npm/
-.pnpm-debug.log*
-.project
-.pytest_cache/
-.reflex/
-.secrets
-.settings/
-.states
-.tmp/
-.tox/
-.venv/
-.vscode-server/
-.vscode/
-.web
-.web/
-.yarn/
-Datos*.ods
-ENV/
-Thumbs.db
-__pycache__/
 assets/external/
-bun.lockb
-config/secrets/
-coverage.xml
-database.db
-debug_*
-dmypy.json
-docker-compose.override.yml
-ehthumbs.db
-env.bak/
-env/
-htmlcov/
-log/
-logs/
-node_modules/
-nosetests.xml
-npm-debug.log*
-package-lock.json
-pyvenv.cfg
-reflex.db
-rxconfig.local.py
-secrets/
-temp_*
 test_*
-tmp/
-venv.bak/
-venv/
-yarn-debug.log*
-yarn-error.log*
-yarn.lock
+.local/
+
+# ========================================
+# 🔍 ARCHIVOS DE TESTING Y DEBUG
+# ========================================
+.cover
+nosetests.xml
+.env

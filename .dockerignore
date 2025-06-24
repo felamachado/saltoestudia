@@ -1,0 +1,10 @@
+.web/
+.npm/
+.bun/
+.local/
+__pycache__/
+.git/
+node_modules/
+*.pyc
+*.log
+*.tmp
