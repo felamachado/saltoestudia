@@ -2,233 +2,282 @@
 
 Sistema de gestión de cursos e instituciones educativas de Salto, Uruguay.
 
+Desarrollado con **Reflex** (Python) + **SQLite** + **Docker**, incluye gestión completa de cursos, instituciones y panel administrativo con autenticación.
+
+## ✨ Características
+
+- 🎯 **Buscador de cursos** con filtros avanzados
+- 🏛️ **Gestión de instituciones** educativas
+- 👨‍💼 **Panel administrativo** por institución
+- 🔒 **Autenticación segura** con bcrypt
+- 📱 **Diseño responsive** con AG Grid
+- 🗄️ **Base de datos SQLite** (sin dependencias externas)
+- 🐳 **Docker optimizado** con hot-reload
+
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
-- Docker y Docker Compose instalados
+- Docker instalado
 - Git
 
-### 🔧 Configuración Inicial
+### 🔧 Desarrollo (Hot-reload)
 
-1. **Clonar el repositorio:**
 ```bash
-git clone <url-del-repositorio>
+# 1. Clonar el repositorio
+git clone https://github.com/felamachado/saltoestudia.git
 cd saltoestudia
+
+# 2. Ejecutar en modo desarrollo
+./run-dev.sh
 ```
 
-2. **Configurar variables de entorno:**
+**¡Listo!** La aplicación estará disponible en:
+- **Frontend:** http://localhost:3000
+- **Backend:** http://localhost:8000
+- **Admin:** http://localhost:3000/admin
+
+### 🏭 Producción
+
 ```bash
-# Copiar la plantilla de configuración
-cp .env.example .env
-
-# Editar el archivo .env con tus credenciales seguras
-nano .env  # o usar tu editor preferido
+# Ejecutar en modo producción
+./run-prod.sh
 ```
-
-3. **Generar contraseñas seguras:**
-```bash
-# Para generar contraseñas aleatorias seguras:
-openssl rand -base64 32
-```
-
-4. **Construir y ejecutar los contenedores:**
-```bash
-# Construir e iniciar todos los servicios
-docker-compose up --build
-
-# O en modo background:
-docker-compose up --build -d
-```
-
-5. **La base de datos se inicializa automáticamente:**
-```bash
-# Los datos se poblarán automáticamente al iniciar
-# No se requiere configuración adicional
-```
-
-## 🌐 Acceso a la Aplicación
-
-- **Aplicación principal:** http://localhost:3000
-- **Panel de administración:** http://localhost:3000/admin
 
 ## 🏗️ Arquitectura
 
-### Servicios Docker
-
-- **`app`** - Aplicación principal (Frontend + Backend)
-  - Puerto 3000: Frontend (React)
-  - Puerto 8000: Backend (FastAPI)
-  - Base de datos: SQLite (archivo local)
-
-### Estructura del Proyecto
+### 📂 Estructura del Proyecto
 
 ```
 saltoestudia/
-├── saltoestudia/           # Código fuente principal
-│   ├── pages/              # Páginas de la aplicación
-│   ├── models.py           # Modelos de base de datos
-│   ├── state.py            # Estado global de Reflex
-│   └── theme.py            # Sistema de diseño centralizado
-├── assets/                 # Recursos estáticos
-├── alembic/                # Migraciones de base de datos
-├── docker-compose.yml      # Configuración de Docker
-├── dockerfile              # Imagen de la aplicación
-└── .env.example            # Plantilla de variables de entorno
+├── saltoestudia/           # 🐍 Código fuente principal
+│   ├── pages/              # 📄 Páginas de la aplicación
+│   │   ├── index.py        # 🏠 Página principal
+│   │   ├── cursos.py       # 🎓 Buscador de cursos
+│   │   ├── instituciones.py # 🏛️ Galería de instituciones
+│   │   ├── admin.py        # 👨‍💼 Panel administrativo
+│   │   └── login.py        # 🔐 Autenticación
+│   ├── models.py           # 🗄️ Modelos de base de datos
+│   ├── database.py         # 🔌 Operaciones CRUD
+│   ├── state.py            # 📊 Estado global de Reflex
+│   ├── layout.py           # 🎨 Layout y navegación
+│   └── theme.py            # 🎨 Sistema de diseño centralizado
+├── assets/                 # 🖼️ Recursos estáticos (logos, etc)
+├── data/                   # 📁 Base de datos SQLite
+├── scripts/                # 🔧 Scripts de utilidad
+├── alembic/                # 🔄 Migraciones de base de datos
+├── dockerfile              # 🐳 Imagen Docker unificada
+├── run-dev.sh              # 🛠️ Script desarrollo (hot-reload)
+├── run-prod.sh             # 🏭 Script producción
+├── init_db.py              # 🗄️ Inicialización de tablas
+├── seed.py                 # 🌱 Datos iniciales
+└── requirements.txt        # 📦 Dependencias Python
 ```
 
-## 🔐 Seguridad
+### 🐳 Docker Simplificado
 
-### Variables de Entorno
+El proyecto usa un **dockerfile unificado** que reemplaza docker-compose + start.sh:
 
-**IMPORTANTE:** Nunca subas el archivo `.env` a GitHub. Siempre usa `.env.example` como plantilla.
+- **`dockerfile`** - Imagen única para desarrollo y producción
+- **`run-dev.sh`** - Desarrollo con hot-reload
+- **`run-prod.sh`** - Producción optimizada
+- **`init_db.py`** - Creación automática de tablas
 
+## 🗄️ Base de Datos
+
+### SQLite (Sin configuración)
+- **Archivo:** `./data/saltoestudia.db`
+- **Inicialización:** Automática al primer arranque
+- **Datos de ejemplo:** Se cargan automáticamente
+- **Respaldos:** Simples archivos `.db`
+
+### Respaldos
 ```bash
-# ✅ Correcto - archivo versionado
-.env.example
+# Crear respaldo
+cp data/saltoestudia.db backup_$(date +%Y%m%d_%H%M%S).db
 
-# ❌ NUNCA hacer - contiene secretos
-.env
-```
-
-### Contraseñas Recomendadas
-
-- **Mínimo 16 caracteres**
-- **Combinar letras, números y símbolos**
-- **Evitar palabras comunes o predecibles**
-- **Cambiar regularmente en producción**
-
-### Generar Contraseñas Seguras
-
-```bash
-# Generar contraseña de 32 caracteres
-openssl rand -base64 32
-
-# Generar múltiples opciones
-for i in {1..5}; do openssl rand -base64 32; done
+# Restaurar desde respaldo
+cp backup_20241223_120000.db data/saltoestudia.db
 ```
 
 ## 🛠️ Desarrollo
 
-### Comandos Útiles
+### Comandos Principales
 
 ```bash
-# Ver logs de todos los servicios
-docker-compose logs -f
+# 🏃‍♂️ Desarrollo (hot-reload)
+./run-dev.sh
 
-# Ver logs de un servicio específico
-docker-compose logs -f reflex
+# 🏭 Producción
+./run-prod.sh
 
-# Reiniciar un servicio
-docker-compose restart reflex
+# 📋 Ver logs en vivo
+docker logs -f saltoestudia-dev    # desarrollo
+docker logs -f saltoestudia-prod   # producción
 
-# Acceder al contenedor de la aplicación
-docker-compose exec reflex bash
+# 🔄 Reiniciar contenedor
+docker restart saltoestudia-dev
 
-# Parar todos los servicios
-docker-compose down
-
-# Parar todos los servicios
-docker-compose down
-
-# Parar y eliminar volúmenes (¡cuidado con los datos de SQLite!)
-docker-compose down -v
+# 🛑 Parar aplicación
+docker stop saltoestudia-dev
+docker rm saltoestudia-dev
 ```
 
-### Base de Datos
+### Hot-reload Automático
+
+El modo desarrollo incluye **hot-reload** automático:
+- ✅ Cambios en Python se aplican instantáneamente
+- ✅ No necesitas reiniciar Docker para cambios de frontend
+- ✅ Solo reinicia para cambios en dependencias
+
+### Migraciones de Base de Datos
 
 ```bash
-# La base de datos SQLite se encuentra en ./data/saltoestudia.db
-# No requiere configuración adicional
+# Entrar al contenedor
+docker exec -it saltoestudia-dev bash
 
-# Crear respaldo de la base de datos
-cp data/saltoestudia.db backup_$(date +%Y%m%d_%H%M%S).db
-
-# Restaurar desde respaldo
-cp backup_YYYYMMDD_HHMMSS.db data/saltoestudia.db
-```
-
-### Migraciones
-
-```bash
 # Generar nueva migración
-docker-compose exec app alembic revision --autogenerate -m "Descripción del cambio"
+alembic revision --autogenerate -m "Descripción del cambio"
 
 # Aplicar migraciones
-docker-compose exec app alembic upgrade head
+alembic upgrade head
 
-# Ver historial de migraciones
-docker-compose exec app alembic history
+# Ver historial
+alembic history
 ```
+
+## 🔐 Seguridad
+
+### Autenticación
+- **Sistema:** bcrypt + sesiones seguras
+- **Usuarios por defecto:** Uno por institución
+- **Contraseñas:** Configurables via variables de entorno
+
+### Variables de Entorno (Opcional)
+
+```bash
+# Crear .env para contraseñas personalizadas
+echo 'DEFAULT_SEED_PASSWORD=tu_contraseña_segura' > .env
+echo 'DATABASE_URL=sqlite:///./data/saltoestudia.db' >> .env
+```
+
+**Nota:** El proyecto funciona sin `.env` usando contraseñas por defecto.
 
 ## 📦 Despliegue en Producción
 
-### Lista de Verificación de Seguridad
+### Lista de Verificación
 
-- [ ] Cambiar todas las contraseñas por defecto
-- [ ] Usar contraseñas seguras (mínimo 16 caracteres)
-- [ ] Configurar HTTPS
-- [ ] Proteger el archivo de base de datos SQLite
-- [ ] Configurar respaldos automáticos
-- [ ] Actualizar dependencias regularmente
+- [ ] ✅ Cambiar contraseñas por defecto (crear `.env`)
+- [ ] ✅ Configurar HTTPS (nginx/traefik)
+- [ ] ✅ Configurar respaldos automáticos de SQLite
+- [ ] ✅ Monitorear logs con `docker logs -f`
+- [ ] ✅ Actualizar dependencias regularmente
 
-### Variables de Producción
+### Ejemplo Producción
 
 ```bash
-# Ejemplo de .env para producción
-DATABASE_URL=sqlite:///data/saltoestudia.db
-DEFAULT_SEED_PASSWORD=contraseña_super_segura_2024
-ENVIRONMENT=production
+# 1. Clonar en servidor
+git clone https://github.com/felamachado/saltoestudia.git
+cd saltoestudia
+
+# 2. Configurar contraseñas (opcional)
+echo 'DEFAULT_SEED_PASSWORD=contraseña_super_segura_2024' > .env
+
+# 3. Ejecutar en producción
+./run-prod.sh
+
+# 4. Configurar proxy reverso (nginx)
+# server {
+#     listen 80;
+#     server_name tu-dominio.com;
+#     location / {
+#         proxy_pass http://localhost:3000;
+#     }
+# }
 ```
 
 ## 🐛 Solución de Problemas
 
 ### Problemas Comunes
 
-**Error de conexión a la base de datos:**
+**Contenedor no arranca:**
 ```bash
-# Verificar que los contenedores estén ejecutándose
-docker-compose ps
+# Ver logs detallados
+docker logs saltoestudia-dev
 
-# Verificar logs de la aplicación
-docker-compose logs app
+# Verificar puertos ocupados
+lsof -i :3000
+lsof -i :8000
+```
 
-# Verificar que el archivo de base de datos existe
-ls -la data/saltoestudia.db
+**Base de datos corrupta:**
+```bash
+# Eliminar y recrear
+rm data/saltoestudia.db
+./run-dev.sh  # Se recrea automáticamente
 ```
 
 **Cambios no se reflejan:**
 ```bash
-# Reflex tiene hot-reload, pero a veces necesitas:
-docker-compose restart app
-
-# O reconstruir completamente:
-docker-compose up --build
+# Reflex tiene hot-reload, pero para dependencias:
+docker restart saltoestudia-dev
 ```
 
 **Problemas de permisos:**
 ```bash
-# Cambiar propietario de archivos
-sudo chown -R $USER:$USER .
+# Cambiar propietario
+sudo chown -R $USER:$USER data/
 ```
+
+## 📊 Datos de Ejemplo
+
+El proyecto incluye datos de ejemplo para Salto, Uruguay:
+
+### 🏛️ Instituciones
+- UDELAR – CENUR LN
+- IAE Salto  
+- Esc. Catalina H. de Castaños
+- Esc. De Administración
+- Esc. Agraria
+
+### 👥 Usuarios Administradores
+- **Emails:** `cenur@cenur.com`, `iae@iae.com`, etc.
+- **Contraseña por defecto:** `CHANGE_THIS_PASSWORD_NOW`
+
+### 🎓 Cursos de Ejemplo
+- Licenciatura en Informática
+- Gestión de Emprendimientos
+- Marketing Digital
+- Electricidad Domiciliaria
+- Y más...
 
 ## 🤝 Contribuir
 
 1. Fork el proyecto
-2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
-3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
-4. Push a la rama (`git push origin feature/AmazingFeature`)
-5. Abrir un Pull Request
+2. Crear rama: `git checkout -b feature/nueva-caracteristica`
+3. Commit cambios: `git commit -m 'Agregar nueva característica'`
+4. Push: `git push origin feature/nueva-caracteristica`
+5. Crear Pull Request
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para detalles.
+MIT License - ver [LICENSE](LICENSE) para detalles.
 
 ## 📞 Contacto
 
 - **Proyecto:** Salto Estudia
+- **GitHub:** https://github.com/felamachado/saltoestudia
 - **Ubicación:** Salto, Uruguay
 - **Año:** 2024
 
 ---
 
-**⚠️ Recordatorio de Seguridad:** Siempre revisa que el archivo `.env` esté en `.gitignore` antes de hacer commit. ¡Nunca subas credenciales a GitHub! 
+## 🎯 Tecnologías
+
+- **Backend:** Python + Reflex + SQLAlchemy
+- **Frontend:** React (generado por Reflex)
+- **Base de Datos:** SQLite
+- **Containerización:** Docker
+- **UI Components:** AG Grid + Chakra UI
+- **Autenticación:** bcrypt + sesiones
+
+**⚡ ¡Listo para producción en segundos!** 🚀 
