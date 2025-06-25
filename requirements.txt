@@ -4,3 +4,4 @@ cryptography
 bcrypt==4.0.1
 sqlalchemy==2.0.41
 reflex-ag-grid
+psycopg2-binary
