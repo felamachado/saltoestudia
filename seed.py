@@ -113,7 +113,7 @@ def seed_database():
     Returns:
         bool: True si exitoso, False si falló
     """
-    db_path = "/app/data/saltoestudia.db"
+    db_path = "reflex.db"
     
     try:
         print("🔗 Conectando a la base de datos...")
