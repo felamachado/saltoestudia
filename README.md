@@ -327,7 +327,7 @@ reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000
 - **Si el puerto está ocupado**, usa el script de limpieza
 - **El script funciona** en cualquier VPS con Linux (Ubuntu, Debian, CentOS, etc.)
 
-### 🛠️ Script de Limpieza Detallado
+### 🛠️ Script de Limpieza detallado
 
 El script `./scripts/limpiar_puertos.sh` incluye:
 
