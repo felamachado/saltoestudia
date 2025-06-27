@@ -1,0 +1,49 @@
+name: 🚀 Deploy to VPS
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: # Permite ejecutar manualmente
+
+jobs:
+  deploy:
+    name: 🐳 Deploy Salto Estudia
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🔑 Setup SSH Key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_actions_deploy_v2
+        chmod 600 ~/.ssh/github_actions_deploy_v2
+        ssh-keyscan -H ${{ secrets.VPS_HOST_IP }} >> ~/.ssh/known_hosts
+        
+    - name: 📁 Create .env file
+      run: |
+        echo "${{ secrets.ENV_FILE }}" > .env
+        
+    - name: 🚀 Deploy to VPS
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_HOST_IP: ${{ secrets.VPS_HOST_IP }}
+      run: |
+        # Hacer el script ejecutable
+        chmod +x deploy-to-vps.sh
+        
+        # Ejecutar deployment
+        ./deploy-to-vps.sh
+        
+    - name: ✅ Deployment Status
+      if: success()
+      run: |
+        echo "🎉 ¡Deployment exitoso!"
+        echo "✅ Aplicación disponible en: https://saltoestudia.infra.com.uy"
+        
+    - name: ❌ Deployment Failed
+      if: failure()
+      run: |
+        echo "💥 Deployment falló. Revisa los logs arriba."
+        exit 1 
