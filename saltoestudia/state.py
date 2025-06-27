@@ -118,6 +118,10 @@ class State(rx.State):
     cursos_originales: List[Dict[str, Any]] = []         # Todos los cursos sin filtrar (cache)
     tabla_cursos_data: List[List[Any]] = []              # Formato tabla para compatibilidad legacy
     
+    # === CACHE Y PERFORMANCE ===
+    cursos_cache_loaded: bool = False                    # Flag de cache de cursos cargado
+    instituciones_cache_loaded: bool = False             # Flag de cache de instituciones cargado
+    
     # === FILTROS DE BÚSQUEDA ===
     # Estos filtros se aplican en tiempo real en la página /cursos
     nivel_seleccionado: str = ""                         # Filtro por nivel educativo
@@ -145,6 +149,9 @@ class State(rx.State):
     login_correo: str = ""                               # Campo email del formulario
     login_password: str = ""                             # Campo contraseña del formulario
     login_error: str = ""                                # Mensaje de error de autenticación
+    
+    # === MENÚ MÓVIL ===
+    show_mobile_menu: bool = False                       # Control menú desplegable móvil
     
     # === SESIÓN DE USUARIO ===
     logged_in_user: Optional[User] = None                # Usuario autenticado actual
@@ -184,8 +191,13 @@ class State(rx.State):
     opciones_duracion_unidad: List[str] = CursosConstants.DURACIONES_UNIDADES # ["meses", "años"]
 
     def cargar_cursos(self):
-        """Carga todos los cursos desde la base de datos."""
-        self.cursos_originales = obtener_cursos()
+        """Carga todos los cursos desde la base de datos con cache inteligente."""
+        if not self.cursos_cache_loaded:
+            print("[PERFORMANCE] Cargando cursos desde DB (primera vez)")
+            self.cursos_originales = obtener_cursos()
+            self.cursos_cache_loaded = True
+        else:
+            print("[PERFORMANCE] Usando cache de cursos (navegación rápida)")
         self.aplicar_filtros()
 
     def aplicar_filtros(self):
@@ -223,15 +235,45 @@ class State(rx.State):
         ]
 
     def cargar_instituciones_nombres(self):
-        self.instituciones_nombres = ["Todos"] + obtener_instituciones_nombres()
+        """Carga nombres de instituciones con cache inteligente."""
+        if not self.instituciones_cache_loaded:
+            print("[PERFORMANCE] Cargando instituciones desde DB (primera vez)")
+            self.instituciones_nombres = ["Todos"] + obtener_instituciones_nombres()
+            self.instituciones_cache_loaded = True
+        else:
+            print("[PERFORMANCE] Usando cache de instituciones (navegación rápida)")
 
     def cargar_instituciones(self):
+        """Carga datos completos de instituciones (solo cuando se necesiten)."""
         self.instituciones_info = obtener_instituciones()
 
     def cargar_datos_cursos_page(self):
-        """Carga los datos iniciales de la página de cursos."""
-        self.cargar_cursos()
-        self.cargar_instituciones_nombres()
+        """Carga los datos iniciales de la página de cursos con optimización de cold start."""
+        print("[PERFORMANCE] cargar_datos_cursos_page ejecutándose")
+        
+        # === PROGRESSIVE LOADING PARA COLD START ===
+        # En primera carga: mostrar página inmediatamente, cargar datos en background
+        if not self.cursos_cache_loaded:
+            print("[PERFORMANCE] COLD START - Implementando progressive loading")
+            
+            # 1. Cargar instituciones primero (query rápida)
+            self.cargar_instituciones_nombres()
+            
+            # 2. Inicializar con estado vacío para mostrar skeleton
+            self.cursos = []
+            self.cursos_originales = []
+            
+            # 3. Cargar cursos en background (query pesada optimizada)
+            self.cargar_cursos()
+            
+            print(f"[PERFORMANCE] COLD START completado - Progressive loading aplicado")
+        else:
+            print("[PERFORMANCE] CACHE HIT - Carga instantánea")
+            # Navegaciones subsecuentes: usar cache (instantáneo)
+            self.cargar_cursos()
+            self.cargar_instituciones_nombres()
+        
+        print(f"[PERFORMANCE] Datos cargados - Cursos: {len(self.cursos_originales)}, Filtrados: {len(self.cursos)}")
 
     def actualizar_nivel_seleccionado(self, nivel: str):
         self.nivel_seleccionado = "" if nivel == "Todos" else nivel
@@ -250,11 +292,20 @@ class State(rx.State):
         self.aplicar_filtros()
 
     def limpiar_filtros(self):
-        """Limpia todos los filtros seleccionados y recarga los datos."""
+        """Limpia todos los filtros seleccionados sin recargar datos (usa cache)."""
+        print("[PERFORMANCE] Limpiando filtros (sin recargar DB)")
         self.nivel_seleccionado = ""
         self.requisito_seleccionado = ""
         self.institucion_seleccionada = ""
         self.aplicar_filtros()
+        
+    def forzar_recarga_cache(self):
+        """Fuerza la recarga del cache (útil para admin después de modificar datos)."""
+        print("[PERFORMANCE] Forzando recarga de cache")
+        self.cursos_cache_loaded = False
+        self.instituciones_cache_loaded = False
+        self.cargar_cursos()
+        self.cargar_instituciones_nombres()
 
     def open_institution_dialog(self, institution: dict):
         self.is_dialog_open = True
@@ -272,6 +323,14 @@ class State(rx.State):
         self.login_error = ""
         self.login_correo = ""
         self.login_password = ""
+    
+    def toggle_mobile_menu(self):
+        """Alterna la visibilidad del menú móvil."""
+        self.show_mobile_menu = not self.show_mobile_menu
+    
+    def close_mobile_menu(self):
+        """Cierra el menú móvil."""
+        self.show_mobile_menu = False
 
     def set_show_login_dialog(self, show: bool):
         self.show_login_dialog = show

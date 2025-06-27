@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  saltoestudia:
+    build:
+      context: .
+      dockerfile: dockerfile.production
+    container_name: saltoestudia-app
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data:rw
+      - ./logs:/app/logs:rw
+    networks:
+      - traefik-net
+    labels:
+      - 'traefik.enable=true'
+      
+      # Frontend service (puerto 3000) - TODAS las páginas HTML
+      - 'traefik.http.routers.saltoestudia-frontend.rule=Host(`saltoestudia.infra.com.uy`) && !PathPrefix(`/_event`)'
+      - 'traefik.http.routers.saltoestudia-frontend.entrypoints=websecure'
+      - 'traefik.http.routers.saltoestudia-frontend.service=saltoestudia-frontend'
+      - 'traefik.http.routers.saltoestudia-frontend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.saltoestudia-frontend.loadbalancer.server.port=3000'
+      
+      # Backend service (puerto 8000) - Solo WebSocket y APIs
+      - 'traefik.http.routers.saltoestudia-backend.rule=Host(`saltoestudia.infra.com.uy`) && PathPrefix(`/_event`)'
+      - 'traefik.http.routers.saltoestudia-backend.entrypoints=websecure'
+      - 'traefik.http.routers.saltoestudia-backend.service=saltoestudia-backend'
+      - 'traefik.http.routers.saltoestudia-backend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.saltoestudia-backend.loadbalancer.server.port=8000'
+      
+      - 'traefik.docker.network=traefik-net'
+
+networks:
+  traefik-net:
+    external: true 

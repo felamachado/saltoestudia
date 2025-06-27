@@ -75,7 +75,7 @@ def navbar_icons() -> rx.Component:
                         margin="0",
                         padding="0",
                     ),
-                    spacing="12px",
+                    spacing="3",
                     align="center",
                 ),
                 
@@ -85,7 +85,7 @@ def navbar_icons() -> rx.Component:
                     navbar_icons_item("Instituciones", "info", "/instituciones"), 
                     navbar_icons_item("Buscador de cursos", "search", "/cursos"),
                     navbar_icons_item("Info", "info", "/info"),
-                    spacing="8px",
+                    spacing="3",
                     align="center",
                 ),
                 
@@ -125,21 +125,19 @@ def navbar_icons() -> rx.Component:
                         margin="0",
                         padding="0",
                     ),
-                    spacing="8px",
+                    spacing="3",
                     align="center",
                 ),
-                
                 # Botón menú móvil
                 rx.button(
                     "☰",
-                    on_click=rx.redirect("/info"),
+                    on_click=State.toggle_mobile_menu,
                     bg="transparent",
                     color="white",
                     font_size="20px",
                     border="none",
                     cursor="pointer",
                 ),
-                
                 # === DISTRIBUCIÓN HORIZONTAL MÓVIL ===
                 justify="between",    # Separación máxima izquierda-derecha
                 align="center",       # Centrado vertical
@@ -159,6 +157,81 @@ def navbar_icons() -> rx.Component:
         top="0",
         z_index="1000",
         box_shadow="0 2px 4px rgba(0,0,0,0.1)",
+    )
+
+def mobile_menu() -> rx.Component:
+    """Menú desplegable para móviles."""
+    return rx.cond(
+        State.show_mobile_menu,
+        rx.box(
+            rx.vstack(
+                # Fondo semi-transparente que cierra el menú
+                rx.box(
+                    width="100vw",
+                    height="100vh",
+                    position="fixed",
+                    top="56px",  # Debajo del header
+                    left="0",
+                    bg="rgba(0,0,0,0.5)",
+                    z_index="999",
+                    on_click=State.close_mobile_menu,
+                ),
+                # Menú desplegable
+                rx.box(
+                    rx.vstack(
+                        # Elementos del menú
+                        mobile_menu_item("Inicio", "view", "/"),
+                        mobile_menu_item("Instituciones", "info", "/instituciones"),
+                        mobile_menu_item("Buscador de cursos", "search", "/cursos"),
+                        mobile_menu_item("Info", "info", "/info"),
+                        spacing="3",
+                        width="100%",
+                    ),
+                    bg="#004A99",
+                    width="250px",
+                    position="fixed",
+                    top="56px",
+                    right="0",
+                    z_index="1000",
+                    box_shadow="0 4px 6px rgba(0,0,0,0.1)",
+                    border_left="1px solid rgba(255,255,255,0.1)",
+                ),
+                spacing="3",
+            ),
+            position="fixed",
+            top="0",
+            left="0",
+            width="100vw",
+            height="100vh",
+            z_index="999",
+        )
+    )
+
+def mobile_menu_item(text: str, icon: str, url: str) -> rx.Component:
+    """Item individual del menú móvil."""
+    return rx.link(
+        rx.hstack(
+            rx.icon(tag=icon, size=20, color="white"),
+            rx.text(
+                text,
+                color="white",
+                font_family=theme.Typography.FONT_FAMILY,
+                font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                font_size="16px",
+            ),
+            spacing="3",
+            align="center",
+            width="100%",
+        ),
+        href=url,
+        on_click=State.close_mobile_menu,  # Cerrar menú al hacer click
+        _hover={
+            "bg": "rgba(255,255,255,0.1)",
+        },
+        padding="16px 20px",
+        border_bottom="1px solid rgba(255,255,255,0.1)",
+        width="100%",
+        transition="all 0.2s ease-in-out",
     )
 
 def get_last_modification_date():
@@ -181,37 +254,32 @@ def footer():
     version = f"v{last_mod_date.year % 100:02d}.{last_mod_date.month:02d}"
     
     return rx.center(
-        rx.box(
-            rx.text(
-                f"Salto Estudia {version} • Admin",
-                font_size="10px",
-                color="white",  # Texto blanco para buen contraste
-                opacity="0.8",
-                line_height="1",
-                cursor="pointer",
-                on_click=State.toggle_login_dialog,
-                _hover={
-                    "bg": "rgba(255,255,255,0.1)",
-                    "opacity": "1",
-                },
-                padding_x="4px",
-                border_radius="3px",
-                transition="all 0.2s ease-in-out",
-            ),
-            bg="#004A99",  # Mismo azul sólido del header
-            border_radius="8px",
-            padding_x="10px",
-            padding_y="2px",
-            margin_top="auto",
-            margin_bottom="6px",
-            display="flex",
-            align_items="center",
-            justify_content="center",
-            height="auto",
-            min_height="18px",
+        rx.text(
+            f"Salto Estudia {version} • Admin",
+            font_size="10px",
+            color="#666666",  # Texto gris discreto
+            opacity="0.7",
+            line_height="1",
+            cursor="pointer",
+            on_click=State.toggle_login_dialog,
+            _hover={
+                "opacity": "1",
+                "color": "#333333",  # Más oscuro al hover
+            },
+            # Sombra sutil negra como fondo
+            bg="rgba(0,0,0,0.1)",  # Fondo negro muy transparente
+            padding_x="8px",
+            padding_y="3px",
+            border_radius="4px",
+            transition="all 0.2s ease-in-out",
+            box_shadow="0 1px 3px rgba(0,0,0,0.2)",  # Sombra sutil
+            backdrop_filter="blur(2px)",  # Efecto de blur sutil
+            margin_bottom="8px",
         ),
         width="100%",
         bg="transparent",
+        position="relative",
+        bottom="0",
     )
 
 def login_dialog() -> rx.Component:
@@ -298,7 +366,7 @@ def login_dialog() -> rx.Component:
                             ),
                             align_items="start",
                             width="100%",
-                            spacing="1",
+                            spacing="3",
                         ),
                         
                         # Campo contraseña con estilo centralizado
@@ -332,7 +400,7 @@ def login_dialog() -> rx.Component:
                             ),
                             align_items="start",
                             width="100%",
-                            spacing="1",
+                            spacing="3",
                         ),
                         
                         # === MENSAJE DE ERROR ===
@@ -347,7 +415,7 @@ def login_dialog() -> rx.Component:
                                         font_family=theme.Typography.FONT_FAMILY,
                                         font_size="2",
                                     ),
-                                    spacing="2",
+                                    spacing="3",
                                 ),
                                 padding="0.75em",
                                 bg="#fef2f2",  # Fondo rojo claro para errores
@@ -399,11 +467,11 @@ def login_dialog() -> rx.Component:
                             width="100%",
                         ),
                         
-                        spacing="4",
+                        spacing="3",
                         width="100%",
                     ),
                     
-                    spacing="4",
+                    spacing="3",
                     width="100%",
                 ),
                 # === ESTILOS DEL MODAL ===
@@ -432,6 +500,7 @@ def login_dialog() -> rx.Component:
 def page_layout(*content):
     return rx.vstack(
         navbar_icons(),
+        mobile_menu(),  # Agregar el menú móvil
         rx.box(
             *content, 
             padding="20px", 
@@ -445,6 +514,6 @@ def page_layout(*content):
         min_height="100vh",
         width="100%",
         align_items="center",
-        spacing="0",
+        spacing="3",
         bg=theme.Color.GRAY_100,  # Fondo gris para toda la página
     )

@@ -7,8 +7,8 @@ from .. import theme
 from ..theme import ButtonStyle, ComponentStyle, create_course_table_header, create_course_table_cell, create_custom_dropdown_css
 from typing import Dict, Any
 
-def admin_layout(*content) -> rx.Component:
-    """Layout simple para la página de administración."""
+def admin_layout_desktop(*content) -> rx.Component:
+    """Layout desktop para la página de administración."""
     return rx.vstack(
         rx.hstack(
             rx.heading(
@@ -31,6 +31,42 @@ def admin_layout(*content) -> rx.Component:
         rx.box(
             *content,
             padding="2em",
+            width="100%",
+            flex_grow="1",
+        ),
+        min_height="100vh",
+        width="100%",
+        align_items="stretch",
+        bg=theme.Color.GRAY_100,
+    )
+
+def admin_layout_mobile(*content) -> rx.Component:
+    """Layout móvil para la página de administración."""
+    return rx.vstack(
+        rx.vstack(
+            rx.heading(
+                "Panel de Administración",
+                color=theme.Color.GRAY_900,
+                font_family=theme.Typography.FONT_FAMILY,
+                size="6",
+                text_align="center",
+            ),
+            rx.button(
+                "Cerrar Sesión", 
+                on_click=State.logout,
+                **ButtonStyle.primary(),
+                font_family=theme.Typography.FONT_FAMILY,
+                width="100%",
+            ),
+            width="100%",
+            padding="1em 1em",
+            bg=theme.Color.GRAY_300,
+            align_items="center",
+            spacing="3",
+        ),
+        rx.box(
+            *content,
+            padding="1em",
             width="100%",
             flex_grow="1",
         ),
@@ -94,31 +130,66 @@ def curso_form_dialog() -> rx.Component:
                             align_items="start", width="100%",
                         ),
                         
-                        # Campo Duración (Número y Unidad)
-                        rx.hstack(
-                            rx.vstack(
-                                rx.text("Duración", **ComponentStyle.FORM_LABEL),
-                                rx.select(
-                                    State.opciones_duracion_numero,
-                                    value=State.form_duracion_numero,
-                                    on_change=State.set_form_duracion_numero,
-                                    placeholder="Seleccionar",
-                                    **ComponentStyle.FORM_SELECT,
+                        # Campo Duración (Número y Unidad) - Responsive
+                        rx.box(
+                            # Desktop: horizontal
+                            rx.desktop_only(
+                                rx.hstack(
+                                    rx.vstack(
+                                        rx.text("Duración", **ComponentStyle.FORM_LABEL),
+                                        rx.select(
+                                            State.opciones_duracion_numero,
+                                            value=State.form_duracion_numero,
+                                            on_change=State.set_form_duracion_numero,
+                                            placeholder="Seleccionar",
+                                            **ComponentStyle.FORM_SELECT,
+                                        ),
+                                        align_items="start", width="50%",
+                                    ),
+                                    rx.vstack(
+                                        rx.text("Unidad", **ComponentStyle.FORM_LABEL, opacity=0), # Placeholder for alignment
+                                        rx.select(
+                                            State.opciones_duracion_unidad,
+                                            value=State.form_duracion_unidad,
+                                            on_change=State.set_form_duracion_unidad,
+                                            placeholder="Seleccionar",
+                                            **ComponentStyle.FORM_SELECT,
+                                        ),
+                                        align_items="start", width="50%",
+                                    ),
+                                    spacing="3",
+                                    width="100%",
                                 ),
-                                align_items="start", width="50%",
                             ),
-                            rx.vstack(
-                                rx.text("Unidad", **ComponentStyle.FORM_LABEL, opacity=0), # Placeholder for alignment
-                                rx.select(
-                                    State.opciones_duracion_unidad,
-                                    value=State.form_duracion_unidad,
-                                    on_change=State.set_form_duracion_unidad,
-                                    placeholder="Seleccionar",
-                                    **ComponentStyle.FORM_SELECT,
+                            # Móvil: vertical
+                            rx.mobile_and_tablet(
+                                rx.vstack(
+                                    rx.vstack(
+                                        rx.text("Duración", **ComponentStyle.FORM_LABEL),
+                                        rx.select(
+                                            State.opciones_duracion_numero,
+                                            value=State.form_duracion_numero,
+                                            on_change=State.set_form_duracion_numero,
+                                            placeholder="Seleccionar número",
+                                            **ComponentStyle.FORM_SELECT,
+                                        ),
+                                        align_items="start", width="100%",
+                                    ),
+                                    rx.vstack(
+                                        rx.text("Unidad", **ComponentStyle.FORM_LABEL),
+                                        rx.select(
+                                            State.opciones_duracion_unidad,
+                                            value=State.form_duracion_unidad,
+                                            on_change=State.set_form_duracion_unidad,
+                                            placeholder="Seleccionar unidad",
+                                            **ComponentStyle.FORM_SELECT,
+                                        ),
+                                        align_items="start", width="100%",
+                                    ),
+                                    spacing="3",
+                                    width="100%",
                                 ),
-                                align_items="start", width="50%",
                             ),
-                            spacing="3",
                             width="100%",
                         ),
                         
@@ -155,22 +226,49 @@ def curso_form_dialog() -> rx.Component:
                     
                     rx.divider(border_color=theme.Color.GRAY_500),
                     
-                    # Botones de acción
-                    rx.hstack(
-                        rx.button(
-                            "Cancelar",
-                            on_click=State.cerrar_dialogo,
-                            **ButtonStyle.secondary(),
-                            font_family=theme.Typography.FONT_FAMILY,
+                    # Botones de acción - Responsive
+                    rx.box(
+                        # Desktop: horizontal
+                        rx.desktop_only(
+                            rx.hstack(
+                                rx.button(
+                                    "Cancelar",
+                                    on_click=State.cerrar_dialogo,
+                                    **ButtonStyle.secondary(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                ),
+                                rx.button(
+                                    "Guardar Curso",
+                                    on_click=State.guardar_curso,
+                                    **ButtonStyle.primary(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                ),
+                                spacing="3",
+                                justify="end",
+                                width="100%",
+                            ),
                         ),
-                        rx.button(
-                            "Guardar Curso",
-                            on_click=State.guardar_curso,
-                            **ButtonStyle.primary(),
-                            font_family=theme.Typography.FONT_FAMILY,
+                        # Móvil: vertical, botones full width
+                        rx.mobile_and_tablet(
+                            rx.vstack(
+                                rx.button(
+                                    "Guardar Curso",
+                                    on_click=State.guardar_curso,
+                                    **ButtonStyle.primary(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                    width="100%",
+                                ),
+                                rx.button(
+                                    "Cancelar",
+                                    on_click=State.cerrar_dialogo,
+                                    **ButtonStyle.secondary(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                    width="100%",
+                                ),
+                                spacing="3",
+                                width="100%",
+                            ),
                         ),
-                        spacing="3",
-                        justify="end",
                         width="100%",
                     ),
                     
@@ -178,9 +276,11 @@ def curso_form_dialog() -> rx.Component:
                     width="100%",
                 ),
                 **ComponentStyle.MODAL,
-                padding="24px",
+                padding="16px",
                 max_width="500px",
-                width="90%",
+                width="95%",
+                max_height="90vh",
+                overflow_y="auto",
             ),
             position="fixed",
             top="0",
@@ -234,24 +334,53 @@ def delete_alert_dialog() -> rx.Component:
                     
                     rx.divider(border_color=theme.Color.GRAY_500),
                     
-                    # Botones de acción
-                    rx.hstack(
-                        rx.button(
-                            "Cancelar",
-                            on_click=State.cerrar_alerta_eliminar,
-                            **ButtonStyle.secondary(),
-                            font_family=theme.Typography.FONT_FAMILY,
-                            font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                    # Botones de acción - Responsive
+                    rx.box(
+                        # Desktop: horizontal
+                        rx.desktop_only(
+                            rx.hstack(
+                                rx.button(
+                                    "Cancelar",
+                                    on_click=State.cerrar_alerta_eliminar,
+                                    **ButtonStyle.secondary(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                    font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                                ),
+                                rx.button(
+                                    "Eliminar",
+                                    on_click=State.confirmar_eliminacion,
+                                    **ButtonStyle.danger(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                    font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                                ),
+                                spacing="3",
+                                justify="end",
+                                width="100%",
+                            ),
                         ),
-                        rx.button(
-                            "Eliminar",
-                            on_click=State.confirmar_eliminacion,
-                            **ButtonStyle.danger(),
-                            font_family=theme.Typography.FONT_FAMILY,
-                            font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                        # Móvil: vertical, botones full width
+                        rx.mobile_and_tablet(
+                            rx.vstack(
+                                rx.button(
+                                    "Eliminar",
+                                    on_click=State.confirmar_eliminacion,
+                                    **ButtonStyle.danger(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                    font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                                    width="100%",
+                                ),
+                                rx.button(
+                                    "Cancelar",
+                                    on_click=State.cerrar_alerta_eliminar,
+                                    **ButtonStyle.secondary(),
+                                    font_family=theme.Typography.FONT_FAMILY,
+                                    font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                                    width="100%",
+                                ),
+                                spacing="3",
+                                width="100%",
+                            ),
                         ),
-                        spacing="3",
-                        justify="end",
                         width="100%",
                     ),
                     
@@ -259,9 +388,9 @@ def delete_alert_dialog() -> rx.Component:
                     width="100%",
                 ),
                 **ComponentStyle.MODAL,
-                padding="24px",
+                padding="20px",
                 max_width="400px",
-                width="90%",
+                width="95%",
             ),
             position="fixed",
             top="0",
@@ -380,88 +509,274 @@ def render_curso_row(curso: Dict[str, Any]) -> rx.Component:
         **ComponentStyle.COURSE_TABLE_ROW_HOVER,
     )
 
+def render_curso_card_mobile(curso: Dict[str, Any]) -> rx.Component:
+    """Renderiza una tarjeta de curso para móvil."""
+    return rx.box(
+        rx.vstack(
+            # Título del curso
+            rx.heading(
+                curso["nombre"],
+                size="4",
+                color=theme.Color.BLUE_300,
+                font_family=theme.Typography.FONT_FAMILY,
+                font_weight=theme.Typography.FONT_WEIGHTS["bold"],
+                margin_bottom="8px",
+            ),
+            
+            # Información del curso
+            rx.vstack(
+                rx.hstack(
+                    rx.text("Nivel:", font_weight="bold", color=theme.Color.GRAY_900),
+                    rx.text(curso["nivel"], color=theme.Color.GRAY_700),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.hstack(
+                    rx.text("Duración:", font_weight="bold", color=theme.Color.GRAY_900),
+                                            rx.text(
+                            rx.cond(
+                                curso["duracion_numero"],
+                                f"{curso['duracion_numero']} {curso['duracion_unidad']}",
+                                "N/A"
+                            ),
+                            color=theme.Color.GRAY_700,
+                        ),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.hstack(
+                    rx.text("Requisitos:", font_weight="bold", color=theme.Color.GRAY_900),
+                    rx.text(curso["requisitos_ingreso"], color=theme.Color.GRAY_700),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.cond(
+                    curso["informacion"],
+                    rx.vstack(
+                        rx.text("Información:", font_weight="bold", color=theme.Color.GRAY_900),
+                        rx.text(
+                            curso["informacion"],
+                            color=theme.Color.GRAY_700,
+                            font_size="3",
+                            line_height="1.4",
+                        ),
+                        align_items="start",
+                        spacing="1",
+                        width="100%",
+                    ),
+                ),
+                spacing="3",
+                align_items="start",
+                width="100%",
+            ),
+            
+            # Botones de acción
+            rx.hstack(
+                rx.button(
+                    "Editar", 
+                    on_click=lambda: State.abrir_dialogo_editar(curso),
+                    **ButtonStyle.secondary(),
+                    font_family=theme.Typography.FONT_FAMILY,
+                    flex="1",
+                ),
+                rx.button(
+                    "Eliminar", 
+                    on_click=lambda: State.abrir_alerta_eliminar(curso["id"]),
+                    **ButtonStyle.danger(),
+                    font_family=theme.Typography.FONT_FAMILY,
+                    flex="1",
+                ),
+                spacing="3",
+                width="100%",
+                margin_top="12px",
+            ),
+            
+            spacing="4",
+            align_items="start",
+            width="100%",
+        ),
+        bg=theme.Color.DARK_CARD,
+        border=f"1px solid {theme.Color.GRAY_500}",
+        border_radius="12px",
+        padding="16px",
+        margin_bottom="12px",
+        width="100%",
+        _hover={
+            "transform": "translateY(-2px)",
+            "box_shadow": "0 4px 12px rgba(0,0,0,0.1)",
+        },
+        transition="all 0.2s ease-in-out",
+    )
+
+def admin_content_desktop() -> rx.Component:
+    """Contenido de admin para desktop."""
+    return admin_layout_desktop(
+        create_custom_dropdown_css(),
+        rx.vstack(
+            rx.hstack(
+                rx.vstack(
+                    rx.heading(
+                        "Gestión de Cursos", 
+                        size="9",
+                        color=theme.Color.BLUE_300,
+                        font_family=theme.Typography.FONT_FAMILY,
+                        font_weight=theme.Typography.FONT_WEIGHTS["bold"],
+                    ),
+                    rx.cond(
+                        State.logged_in_user,
+                        rx.text(
+                            f"Institución: {State.logged_in_user.institucion_nombre}",
+                            color=theme.Color.GRAY_900,
+                            font_family=theme.Typography.FONT_FAMILY,
+                        ),
+                        rx.text(
+                            "Cargando...",
+                            color=theme.Color.GRAY_700,
+                            font_family=theme.Typography.FONT_FAMILY,
+                        )
+                    ),
+                    align_items="start",
+                ),
+                rx.spacer(),
+                rx.button(
+                    "Agregar Nuevo Curso", 
+                    on_click=State.abrir_dialogo_agregar,
+                    **ButtonStyle.primary(),
+                    font_family=theme.Typography.FONT_FAMILY,
+                ),
+                align_items="end",
+                width="100%",
+                margin_bottom="2em",
+            ),
+            
+            rx.cond(
+                State.admin_cursos,
+                # Tabla tradicional para administración de cursos (con botones funcionales)
+                rx.table.root(
+                    rx.table.header(
+                        create_course_table_header([
+                            "Nombre", "Nivel", "Duración", "Requisitos", "Información", "Acciones"
+                        ])
+                    ),
+                    rx.table.body(
+                        rx.foreach(State.admin_cursos, render_curso_row)
+                    ),
+                    **ComponentStyle.COURSE_TABLE,
+                ),
+                # Mostrar mensaje cuando no hay cursos
+                rx.box(
+                    rx.text(
+                        "No hay cursos registrados para esta institución.",
+                        color=theme.Color.GRAY_700,
+                        font_family=theme.Typography.FONT_FAMILY,
+                        text_align="center",
+                        font_size="4",
+                    ),
+                    padding="4em",
+                    bg=theme.Color.DARK_CARD,
+                    border=f"1px solid {theme.Color.GRAY_500}",
+                    border_radius="8px",
+                )
+            ),
+
+            delete_alert_dialog(),
+            curso_form_dialog(),
+            spacing="0",
+            width="100%",
+            align_items="stretch",
+        )
+    )
+
+def admin_content_mobile() -> rx.Component:
+    """Contenido de admin para móvil."""
+    return admin_layout_mobile(
+        create_custom_dropdown_css(),
+        rx.vstack(
+            # Header móvil
+            rx.vstack(
+                rx.heading(
+                    "Gestión de Cursos", 
+                    size="7",
+                    color=theme.Color.BLUE_300,
+                    font_family=theme.Typography.FONT_FAMILY,
+                    font_weight=theme.Typography.FONT_WEIGHTS["bold"],
+                    text_align="center",
+                ),
+                rx.cond(
+                    State.logged_in_user,
+                    rx.text(
+                        f"Institución: {State.logged_in_user.institucion_nombre}",
+                        color=theme.Color.GRAY_900,
+                        font_family=theme.Typography.FONT_FAMILY,
+                        text_align="center",
+                        font_size="3",
+                    ),
+                    rx.text(
+                        "Cargando...",
+                        color=theme.Color.GRAY_700,
+                        font_family=theme.Typography.FONT_FAMILY,
+                        text_align="center",
+                        font_size="3",
+                    )
+                ),
+                rx.button(
+                    "Agregar Nuevo Curso", 
+                    on_click=State.abrir_dialogo_agregar,
+                    **ButtonStyle.primary(),
+                    font_family=theme.Typography.FONT_FAMILY,
+                    width="100%",
+                ),
+                width="100%",
+                spacing="4",
+                margin_bottom="1.5em",
+                align_items="center",
+            ),
+            
+            # Contenido de cursos
+            rx.cond(
+                State.admin_cursos,
+                # Vista de tarjetas para móvil
+                rx.vstack(
+                    rx.foreach(State.admin_cursos, render_curso_card_mobile),
+                    spacing="0",
+                    width="100%",
+                ),
+                # Mostrar mensaje cuando no hay cursos
+                rx.box(
+                    rx.text(
+                        "No hay cursos registrados para esta institución.",
+                        color=theme.Color.GRAY_700,
+                        font_family=theme.Typography.FONT_FAMILY,
+                        text_align="center",
+                        font_size="3",
+                    ),
+                    padding="2em",
+                    bg=theme.Color.DARK_CARD,
+                    border=f"1px solid {theme.Color.GRAY_500}",
+                    border_radius="8px",
+                    width="100%",
+                )
+            ),
+
+            delete_alert_dialog(),
+            curso_form_dialog(),
+            spacing="0",
+            width="100%",
+            align_items="stretch",
+        )
+    )
+
 @rx.page(route="/admin", on_load=[State.cargar_cursos_admin])
 def admin_page() -> rx.Component:
     """Página de administración para usuarios logueados."""
     # Verificación de autenticación simplificada
     return rx.cond(
         State.logged_in_user,  # Verificación directa más simple
-        # Usuario autenticado - mostrar contenido admin
-        admin_layout(
-            create_custom_dropdown_css(),
-            rx.vstack(
-                rx.hstack(
-                    rx.vstack(
-                        rx.heading(
-                            "Gestión de Cursos", 
-                            size="9",
-                            color=theme.Color.BLUE_300,
-                            font_family=theme.Typography.FONT_FAMILY,
-                            font_weight=theme.Typography.FONT_WEIGHTS["bold"],
-                        ),
-                        rx.cond(
-                            State.logged_in_user,
-                            rx.text(
-                                f"Institución: {State.logged_in_user.institucion_nombre}",
-                                color=theme.Color.GRAY_900,
-                                font_family=theme.Typography.FONT_FAMILY,
-                            ),
-                            rx.text(
-                                "Cargando...",
-                                color=theme.Color.GRAY_700,
-                                font_family=theme.Typography.FONT_FAMILY,
-                            )
-                        ),
-                        align_items="start",
-                    ),
-                    rx.spacer(),
-                    rx.button(
-                        "Agregar Nuevo Curso", 
-                        on_click=State.abrir_dialogo_agregar,
-                        **ButtonStyle.primary(),
-                        font_family=theme.Typography.FONT_FAMILY,
-                    ),
-                    align_items="end",
-                    width="100%",
-                    margin_bottom="2em",
-                ),
-                
-                rx.cond(
-                    State.admin_cursos,
-                    # Tabla tradicional para administración de cursos (con botones funcionales)
-                    rx.table.root(
-                        rx.table.header(
-                            create_course_table_header([
-                                "Nombre", "Nivel", "Duración", "Requisitos", "Información", "Acciones"
-                            ])
-                        ),
-                        rx.table.body(
-                            rx.foreach(State.admin_cursos, render_curso_row)
-                        ),
-                        **ComponentStyle.COURSE_TABLE,
-                    ),
-                    # Mostrar mensaje cuando no hay cursos
-                    rx.box(
-                        rx.text(
-                            "No hay cursos registrados para esta institución.",
-                            color=theme.Color.GRAY_700,
-                            font_family=theme.Typography.FONT_FAMILY,
-                            text_align="center",
-                            font_size="4",
-                        ),
-                        padding="4em",
-                        bg=theme.Color.DARK_CARD,
-                        border=f"1px solid {theme.Color.GRAY_500}",
-                        border_radius="8px",
-                    )
-                ),
-
-                delete_alert_dialog(),
-                curso_form_dialog(),
-                spacing="0",
-                width="100%",
-                align_items="stretch",
-            )
+        # Usuario autenticado - mostrar contenido admin responsive
+        rx.box(
+            rx.desktop_only(admin_content_desktop()),
+            rx.mobile_and_tablet(admin_content_mobile()),
+            width="100%",
         ),
         # Usuario no autenticado - mostrar página de redirección
         redirect_to_login_component()

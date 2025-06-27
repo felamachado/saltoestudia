@@ -1,171 +1,142 @@
-# ========================================
-# GITIGNORE PARA SALTO ESTUDIA - MÁXIMA SEGURIDAD
-# ========================================
 
-# ========================================
-# 🔒 ARCHIVOS CRÍTICOS DE SEGURIDAD
-# ========================================
-.env
-.env.*
 !.env.example
-.secrets
-secrets/
-config/secrets/
-*.key
-*.pem
-*.p12
-*.pfx
-credential*
-*secret*
-*password*
-auth.json
-token.json
-
+!data/.gitkeep
 # ========================================
+# =============================================================
+# GITIGNORE PARA SALTO ESTUDIA - MÁXIMA SEGURIDAD
+# 🌐 NODE.JS Y FRONTEND
+# 🐍 PYTHON
+# 🐳 DOCKER Y CONTENEDORES
+# 💻 EDITORES E IDEs
+# 📁 ESTRUCTURA DE DATOS - Permitir carpeta, excluir contenido
+# 📋 ARCHIVOS ESPECÍFICOS DEL PROYECTO
+# 📝 LOGS Y ARCHIVOS TEMPORALES
+# 🔍 ARCHIVOS DE TESTING Y DEBUG
+# 🔑 CLAVES SSH ESPECÍFICAS - GITHUB ACTIONS
+# 🔒 ARCHIVOS CRÍTICOS DE SEGURIDAD
+# 🔧 ENTORNOS VIRTUALES
+# 🖥️ SISTEMA OPERATIVO
 # 🗄️ BASES DE DATOS Y ARCHIVOS DE DATOS
-# ========================================
-*.db
-*.sqlite
-*.sqlite3
-*.sql
-database.db
-reflex.db
-data/*.db
-data/*.sqlite*
-*.dump
+# 🚀 REFLEX ESPECÍFICOS
+*$py.class
 *.backup
 *.bak
-
-# ========================================
-# 🐳 DOCKER Y CONTENEDORES
-# ========================================
-.dockerignore.local
+*.db
 *.dockerfile.local
-docker-compose.override.yml
-
-# ========================================
-# 🐍 PYTHON
-# ========================================
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
+*.dump
 *.egg
-MANIFEST
-
-# ========================================
-# 🌐 NODE.JS Y FRONTEND
-# ========================================
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-package-lock.json
-yarn.lock
-bun.lockb
-.npm/
-.yarn/
-.bun/
-
-# ========================================
-# 🚀 REFLEX ESPECÍFICOS
-# ========================================
-.web/
-.reflex/
-.states
-*.state
-rxconfig.local.py
-
-# ========================================
-# 🔧 ENTORNOS VIRTUALES
-# ========================================
-.venv/
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-pyvenv.cfg
-
-# ========================================
-# 📝 LOGS Y ARCHIVOS TEMPORALES
-# ========================================
+*.egg-info/
+*.key
 *.log
-logs/
-log/
-*.tmp
-*.temp
-.tmp/
-temp_*
-debug_*
-.cache
-.coverage
-coverage.xml
-htmlcov/
-.tox/
-.pytest_cache/
-.hypothesis/
-.mypy_cache/
-dmypy.json
-.dmypy.json
-
-# ========================================
-# 💻 EDITORES E IDEs
-# ========================================
-.vscode/
-.vscode-server/
-.idea/
-*.sublime-project
-*.sublime-workspace
-*.swp
-*.swo
-*~
-.project
-.metadata
-.settings/
-.directory
-
-# ========================================
-# 🖥️ SISTEMA OPERATIVO
-# ========================================
-.DS_Store
-.DS_Store?
-._*
-Thumbs.db
-ehthumbs.db
-.Spotlight-V100
-.Trashes
-
-# ========================================
-# 📋 ARCHIVOS ESPECÍFICOS DEL PROYECTO
-# ========================================
-Datos*.ods
 *.ods
 *.old
 *.orig
-assets/external/
-test_*
-.local/
-
-# ========================================
-# 🔍 ARCHIVOS DE TESTING Y DEBUG
-# ========================================
+*.p12
+*.pem
+*.pfx
+*.py[cod]
+*.so
+*.sql
+*.sqlite
+*.sqlite3
+*.state
+*.sublime-project
+*.sublime-workspace
+*.swo
+*.swp
+*.temp
+*.tmp
+*password*
+*secret*
+*~
+.DS_Store
+.DS_Store?
+.Python
+.Spotlight-V100
+.Trashes
+._*
+.bun/
+.cache
 .cover
-nosetests.xml
+.coverage
+.directory
+.dmypy.json
+.dockerignore.local
+.eggs/
 .env
+.env.*
+.hypothesis/
+.idea/
+.installed.cfg
+.local/
+.metadata
+.mypy_cache/
+.npm/
+.pnpm-debug.log*
+.project
+.pytest_cache/
+.reflex/
+.secrets
+.settings/
+.states
+.tmp/
+.tox/
+.venv/
+.vscode-server/
+.vscode/
+.web
+.web/
+.yarn/
+Datos*.ods
+ENV/
+MANIFEST
+Thumbs.db
+__pycache__/
+assets/external/
+auth.json
+build/
+bun.lockb
+config/secrets/
+coverage.xml
+credential*
+data/*.db
+data/*.sqlite*
+database.db
+debug_*
+develop-eggs/
+dist/
+dmypy.json
+docker-compose.override.yml
+downloads/
+eggs/
+ehthumbs.db
+env.bak/
+env/
+github_actions_deploy
+github_actions_deploy.pub
+htmlcov/
+lib/
+lib64/
+log/
+logs/
+node_modules/
+nosetests.xml
+npm-debug.log*
+package-lock.json
+parts/
+pyvenv.cfg
+reflex.db
+rxconfig.local.py
+sdist/
+secrets/
+temp_*
+test_*
+token.json
+var/
+venv.bak/
+venv/
+wheels/
+yarn-debug.log*
+yarn-error.log*
+yarn.lock
+~/.ssh/github_actions_deploy*

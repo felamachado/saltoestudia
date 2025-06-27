@@ -336,11 +336,12 @@ def institution_dialog() -> rx.Component:
 )
 def instituciones() -> rx.Component:
     # Layout especializado para instituciones sin limitaciones de ancho
-    from ..layout import navbar_icons, footer, login_dialog
+    from ..layout import navbar_icons, footer, login_dialog, mobile_menu
     
     return rx.box(
         rx.vstack(
             navbar_icons(),
+            mobile_menu(),  # Agregar el menú móvil
             # Contenedor principal sin limitaciones de max-width
             rx.box(
                 # Contenedor centrado que no desborda

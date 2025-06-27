@@ -4,6 +4,8 @@ Sistema de gestión de cursos e instituciones educativas de Salto, Uruguay.
 
 Desarrollado con **Reflex** (Python) + **SQLite** + **Docker**, incluye gestión completa de cursos, instituciones y panel administrativo con autenticación.
 
+**✨ En producción:** https://saltoestudia.infra.com.uy
+
 ## ✨ Características
 
 - 🎯 **Buscador de cursos** con filtros avanzados
@@ -13,22 +15,24 @@ Desarrollado con **Reflex** (Python) + **SQLite** + **Docker**, incluye gestión
 - 📱 **Diseño responsive** con AG Grid
 - 🗄️ **Base de datos SQLite** (sin dependencias externas)
 - 🐳 **Docker optimizado** con hot-reload
+- 🚀 **Despliegue VPS automatizado** con Traefik
 
 ## 🚀 Inicio Rápido
 
 ### Prerrequisitos
-- Docker instalado
-- Git
+- Python 3.8+
+- Reflex CLI: `pip install reflex`
+- Docker (opcional, para producción)
 
-### 🔧 Desarrollo (Hot-reload)
+### 🔧 Desarrollo Local
 
 ```bash
 # 1. Clonar el repositorio
 git clone https://github.com/felamachado/saltoestudia.git
 cd saltoestudia
 
-# 2. Ejecutar en modo desarrollo
-./run-dev.sh
+# 2. Arrancar la aplicación (RECOMENDADO)
+./scripts/arrancar_app.sh
 ```
 
 **¡Listo!** La aplicación estará disponible en:
@@ -36,12 +40,24 @@ cd saltoestudia
 - **Backend:** http://localhost:8000
 - **Admin:** http://localhost:3000/admin
 
-### 🏭 Producción
+### 🐳 Desarrollo con Docker
 
 ```bash
-# Ejecutar en modo producción
+# Ejecutar en modo desarrollo (hot-reload)
+./run-dev.sh
+
+# Ejecutar en modo producción local
 ./run-prod.sh
 ```
+
+### 🌐 Despliegue en VPS
+
+```bash
+# Despliegue automatizado a VPS Oracle Cloud
+./deploy-to-vps.sh
+```
+
+**Resultado:** https://saltoestudia.infra.com.uy
 
 ## 🏗️ Arquitectura
 
@@ -49,38 +65,71 @@ cd saltoestudia
 
 ```
 saltoestudia/
-├── saltoestudia/           # 🐍 Código fuente principal
-│   ├── pages/              # 📄 Páginas de la aplicación
-│   │   ├── index.py        # 🏠 Página principal
-│   │   ├── cursos.py       # 🎓 Buscador de cursos
-│   │   ├── instituciones.py # 🏛️ Galería de instituciones
-│   │   ├── admin.py        # 👨‍💼 Panel administrativo
-│   │   └── login.py        # 🔐 Autenticación
-│   ├── models.py           # 🗄️ Modelos de base de datos
-│   ├── database.py         # 🔌 Operaciones CRUD
-│   ├── state.py            # 📊 Estado global de Reflex
-│   ├── layout.py           # 🎨 Layout y navegación
-│   └── theme.py            # 🎨 Sistema de diseño centralizado
-├── assets/                 # 🖼️ Recursos estáticos (logos, etc)
-├── data/                   # 📁 Base de datos SQLite
-├── scripts/                # 🔧 Scripts de utilidad
-├── alembic/                # 🔄 Migraciones de base de datos
-├── dockerfile              # 🐳 Imagen Docker unificada
-├── run-dev.sh              # 🛠️ Script desarrollo (hot-reload)
-├── run-prod.sh             # 🏭 Script producción
-├── init_db.py              # 🗄️ Inicialización de tablas
-├── seed.py                 # 🌱 Datos iniciales
-└── requirements.txt        # 📦 Dependencias Python
+├── saltoestudia/                   # 🐍 Código fuente principal
+│   ├── pages/                      # 📄 Páginas de la aplicación
+│   │   ├── index.py                # 🏠 Página principal
+│   │   ├── cursos.py               # 🎓 Buscador de cursos
+│   │   ├── instituciones.py        # 🏛️ Galería de instituciones
+│   │   ├── admin.py                # 👨‍💼 Panel administrativo
+│   │   └── login.py                # 🔐 Autenticación
+│   ├── models.py                   # 🗄️ Modelos de base de datos
+│   ├── database.py                 # 🔌 Operaciones CRUD
+│   ├── state.py                    # 📊 Estado global de Reflex
+│   └── theme.py                    # 🎨 Sistema de diseño centralizado
+├── assets/                         # 🖼️ Recursos estáticos (logos, etc)
+├── data/                           # 📁 Base de datos SQLite
+├── scripts/                        # 🔧 Scripts de utilidad
+│   ├── arrancar_app.sh            # 🚀 Arranque completo
+│   ├── limpiar_puertos.sh         # 🧹 Limpieza de puertos
+│   └── security_check.sh          # 🔒 Verificaciones de seguridad
+├── alembic/                        # 🔄 Migraciones de base de datos
+├── dockerfile                      # 🐳 Imagen Docker para desarrollo
+├── dockerfile.production           # 🚀 Dockerfile optimizado para VPS
+├── docker-compose.yml              # 🐳 Compose para desarrollo local
+├── docker-compose.production.yml   # ⚙️ Compose con configuración Traefik
+├── deploy-to-vps.sh               # 🌐 Script despliegue automatizado
+├── init_db.py                      # 🗄️ Inicialización de tablas
+├── seed.py                         # 🌱 Datos iniciales
+├── requirements.txt                # 📦 Dependencias Python
+└── rxconfig.py                     # ⚙️ Configuración Reflex
 ```
 
-### 🐳 Docker Simplificado
+## 🧹 Procedimiento Definitivo para Arrancar la App
 
-El proyecto usa un **dockerfile unificado** que reemplaza docker-compose + start.sh:
+**Problema común:** Cuando bajas la app y quieres volver a levantarla, a veces no arranca correctamente (errores de WebSocket, puertos ocupados, etc.).
 
-- **`dockerfile`** - Imagen única para desarrollo y producción
-- **`run-dev.sh`** - Desarrollo con hot-reload
-- **`run-prod.sh`** - Producción optimizada
-- **`init_db.py`** - Creación automática de tablas
+**Solución definitiva:** Usar el script de arranque automático.
+
+### 🚀 Opción 1: Script de Arranque Completo (Recomendado)
+
+```bash
+cd ~/Escritorio/Proyectos/saltoestudia
+./scripts/arrancar_app.sh
+```
+
+**Este script hace todo automáticamente:**
+- ✅ Verifica que estés en la carpeta correcta
+- ✅ Ejecuta la limpieza de puertos
+- ✅ Verifica que Reflex esté instalado
+- ✅ Arranca la aplicación con configuración optimizada
+- ✅ Te muestra las URLs donde acceder
+
+### 🔧 Opción 2: Limpieza + Arranque Manual
+
+```bash
+cd ~/Escritorio/Proyectos/saltoestudia
+./scripts/limpiar_puertos.sh
+reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000
+```
+
+### 🚨 Errores Comunes y Soluciones
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `rxconfig.py not found` | Ejecutando desde carpeta incorrecta | `cd ~/Escritorio/Proyectos/saltoestudia` |
+| `WebSocket connection failed` | Puerto 8000 ocupado | Ejecutar `./scripts/limpiar_puertos.sh` |
+| `404 /_event` | Backend no arrancó correctamente | Verificar puertos y carpeta correcta |
+| `Address already in use` | Proceso previo ocupando puerto | Limpiar puertos antes de arrancar |
 
 ## 🗄️ Base de Datos
 
@@ -92,57 +141,14 @@ El proyecto usa un **dockerfile unificado** que reemplaza docker-compose + start
 
 ### Respaldos
 ```bash
-# Crear respaldo
+# Crear respaldo local
 cp data/saltoestudia.db backup_$(date +%Y%m%d_%H%M%S).db
+
+# Descargar backup desde VPS
+scp ubuntu@150.230.30.198:/srv/docker/saltoestudia/data/saltoestudia.db backup_vps_$(date +%Y%m%d_%H%M%S).db
 
 # Restaurar desde respaldo
 cp backup_20241223_120000.db data/saltoestudia.db
-```
-
-## 🛠️ Desarrollo
-
-### Comandos Principales
-
-```bash
-# 🏃‍♂️ Desarrollo (hot-reload)
-./run-dev.sh
-
-# 🏭 Producción
-./run-prod.sh
-
-# 📋 Ver logs en vivo
-docker logs -f saltoestudia-dev    # desarrollo
-docker logs -f saltoestudia-prod   # producción
-
-# 🔄 Reiniciar contenedor
-docker restart saltoestudia-dev
-
-# 🛑 Parar aplicación
-docker stop saltoestudia-dev
-docker rm saltoestudia-dev
-```
-
-### Hot-reload Automático
-
-El modo desarrollo incluye **hot-reload** automático:
-- ✅ Cambios en Python se aplican instantáneamente
-- ✅ No necesitas reiniciar Docker para cambios de frontend
-- ✅ Solo reinicia para cambios en dependencias
-
-### Migraciones de Base de Datos
-
-```bash
-# Entrar al contenedor
-docker exec -it saltoestudia-dev bash
-
-# Generar nueva migración
-alembic revision --autogenerate -m "Descripción del cambio"
-
-# Aplicar migraciones
-alembic upgrade head
-
-# Ver historial
-alembic history
 ```
 
 ## 🔐 Seguridad
@@ -164,91 +170,27 @@ echo 'DATABASE_URL=sqlite:///./data/saltoestudia.db' >> .env
 
 ## 📦 Despliegue en Producción
 
-### Lista de Verificación
+### VPS Oracle Cloud (Recomendado)
+
+```bash
+# Despliegue automatizado con Traefik
+./deploy-to-vps.sh
+```
+
+**Características:**
+- ✅ **SSL automático** con Let's Encrypt
+- ✅ **WebSocket** funcionando (`wss://`)
+- ✅ **Proxy reverso** Traefik configurado
+- ✅ **Backup automático** antes de cada despliegue
+- ✅ **Monitoreo** integrado
+
+### Lista de Verificación Producción
 
 - [ ] ✅ Cambiar contraseñas por defecto (crear `.env`)
 - [ ] ✅ Configurar HTTPS (nginx/traefik)
 - [ ] ✅ Configurar respaldos automáticos de SQLite
 - [ ] ✅ Monitorear logs con `docker logs -f`
 - [ ] ✅ Actualizar dependencias regularmente
-
-### Ejemplo Producción
-
-```bash
-# 1. Clonar en servidor
-git clone https://github.com/felamachado/saltoestudia.git
-cd saltoestudia
-
-# 2. Configurar contraseñas (opcional)
-echo 'DEFAULT_SEED_PASSWORD=contraseña_super_segura_2024' > .env
-
-# 3. Ejecutar en producción
-./run-prod.sh
-
-# 4. Configurar proxy reverso (nginx)
-# server {
-#     listen 80;
-#     server_name tu-dominio.com;
-#     location / {
-#         proxy_pass http://localhost:3000;
-#     }
-# }
-```
-
-## 🐛 Solución de Problemas
-
-### Problemas Comunes
-
-**Contenedor no arranca:**
-```bash
-# Ver logs detallados
-docker logs saltoestudia-dev
-
-# Verificar puertos ocupados
-lsof -i :3000
-lsof -i :8000
-```
-
-**Base de datos corrupta:**
-```bash
-# Eliminar y recrear
-rm data/saltoestudia.db
-./run-dev.sh  # Se recrea automáticamente
-```
-
-**Cambios no se reflejan:**
-```bash
-# Reflex tiene hot-reload, pero para dependencias:
-docker restart saltoestudia-dev
-```
-
-**Problemas de permisos:**
-```bash
-# Cambiar propietario
-sudo chown -R $USER:$USER data/
-```
-
-## 📊 Datos de Ejemplo
-
-El proyecto incluye datos de ejemplo para Salto, Uruguay:
-
-### 🏛️ Instituciones
-- UDELAR – CENUR LN
-- IAE Salto  
-- Esc. Catalina H. de Castaños
-- Esc. De Administración
-- Esc. Agraria
-
-### 👥 Usuarios Administradores
-- **Emails:** `cenur@cenur.com`, `iae@iae.com`, etc.
-- **Contraseña por defecto:** `CHANGE_THIS_PASSWORD_NOW`
-
-### 🎓 Cursos de Ejemplo
-- Licenciatura en Informática
-- Gestión de Emprendimientos
-- Marketing Digital
-- Electricidad Domiciliaria
-- Y más...
 
 ## 🤝 Contribuir
 
@@ -266,8 +208,9 @@ MIT License - ver [LICENSE](LICENSE) para detalles.
 
 - **Proyecto:** Salto Estudia
 - **GitHub:** https://github.com/felamachado/saltoestudia
+- **Demo:** https://saltoestudia.infra.com.uy
 - **Ubicación:** Salto, Uruguay
-- **Año:** 2024
+- **Año:** 2025
 
 ---
 
@@ -277,7 +220,121 @@ MIT License - ver [LICENSE](LICENSE) para detalles.
 - **Frontend:** React (generado por Reflex)
 - **Base de Datos:** SQLite
 - **Containerización:** Docker
+- **Proxy Reverso:** Traefik (producción VPS)
 - **UI Components:** AG Grid + Chakra UI
 - **Autenticación:** bcrypt + sesiones
+- **SSL:** Let's Encrypt automático
 
-**⚡ ¡Listo para producción en segundos!** 🚀 
+## Extras y Consideraciones
+
+### 🧹 Procedimiento Definitivo para Arrancar la App
+
+**Problema común:** Cuando bajas la app y quieres volver a levantarla, a veces no arranca correctamente (errores de WebSocket, puertos ocupados, etc.).
+
+**Solución definitiva:** Usar el script de limpieza automática.
+
+#### 🔧 Opción 1: Script Automático (Recomendado)
+
+```bash
+# 1. Navega a la carpeta del proyecto
+cd ~/Escritorio/Proyectos/saltoestudia
+
+# 2. Ejecuta el script de limpieza
+./scripts/limpiar_puertos.sh
+
+# 3. Arranca Reflex
+reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000
+```
+
+**El script automáticamente:**
+- ✅ Detecta procesos ocupando puertos 8000 y 3000
+- ✅ Te muestra qué procesos encontró
+- ✅ Te pregunta si quieres matarlos
+- ✅ Verifica que los puertos queden libres
+- ✅ Te da los próximos pasos
+
+#### 🚀 Opción 1.5: Script de Arranque Completo (Más Fácil)
+
+```bash
+# Un solo comando hace todo:
+./scripts/arrancar_app.sh
+```
+
+**Este script hace todo automáticamente:**
+- ✅ Verifica que estés en la carpeta correcta
+- ✅ Ejecuta la limpieza de puertos
+- ✅ Verifica que Reflex esté instalado
+- ✅ Arranca la aplicación con la configuración correcta
+- ✅ Te muestra las URLs donde acceder
+
+#### 🔧 Opción 2: Limpieza Manual
+
+Si prefieres hacerlo manualmente:
+
+```bash
+# 1. Cierra todos los procesos previos
+pkill -f reflex
+pkill -f "python3 -m http.server"
+
+# 2. Verifica que los puertos estén libres
+lsof -i :8000 || echo "Puerto 8000 libre"
+lsof -i :3000 || echo "Puerto 3000 libre"
+
+# 3. Navega a la carpeta del proyecto
+cd ~/Escritorio/Proyectos/saltoestudia
+
+# 4. Arranca Reflex
+reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000
+```
+
+### 🚨 Errores Comunes y Soluciones
+
+| Error | Causa | Solución |
+|-------|-------|----------|
+| `rxconfig.py not found` | Ejecutando desde carpeta incorrecta | `cd ~/Escritorio/Proyectos/saltoestudia` |
+| `WebSocket connection failed` | Puerto 8000 ocupado | Ejecutar `./scripts/limpiar_puertos.sh` |
+| `404 /_event` | Backend no arrancó correctamente | Verificar puertos y carpeta correcta |
+| `Address already in use` | Proceso previo ocupando puerto | Limpiar puertos antes de arrancar |
+
+### 📋 Checklist de Arranque
+
+Antes de arrancar Reflex, verifica:
+
+- [ ] ✅ Estás en la carpeta correcta (`~/Escritorio/Proyectos/saltoestudia`)
+- [ ] ✅ Los puertos 8000 y 3000 están libres
+- [ ] ✅ No hay procesos de Reflex corriendo
+- [ ] ✅ El archivo `rxconfig.py` existe en tu carpeta actual
+
+### 🔍 Verificación Rápida
+
+```bash
+# Verificar carpeta y archivos
+pwd  # Debe mostrar: /home/felipe/Escritorio/Proyectos/saltoestudia
+ls rxconfig.py  # Debe existir
+
+# Verificar puertos
+lsof -i :8000 -i :3000 || echo "Puertos libres"
+
+# Si todo está bien, arrancar
+reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000
+```
+
+### 📝 Notas Importantes
+
+- **No uses** `python3 -m http.server` para servir la app, solo Reflex
+- **Siempre ejecuta** Reflex desde la carpeta donde está `rxconfig.py`
+- **Si ves errores**, revisa los logs de la terminal
+- **Si el puerto está ocupado**, usa el script de limpieza
+- **El script funciona** en cualquier VPS con Linux (Ubuntu, Debian, CentOS, etc.)
+
+### 🛠️ Script de Limpieza Detallado
+
+El script `./scripts/limpiar_puertos.sh` incluye:
+
+- **Detección automática** de procesos en puertos 8000 y 3000
+- **Información detallada** de qué procesos encontró
+- **Confirmación interactiva** antes de matar procesos
+- **Verificación final** de que los puertos quedaron libres
+- **Instalación automática** de `lsof` si no está disponible
+- **Compatibilidad** con diferentes distribuciones Linux
+- **Manejo de errores** y mensajes informativos con colores

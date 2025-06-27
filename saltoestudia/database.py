@@ -181,9 +181,8 @@ def obtener_cursos() -> List[Dict[str, Any]]:
     """
     Obtiene todos los cursos del sistema con información de la institución.
     
-    Esta es la función principal para la página pública de cursos. Carga todos
-    los cursos disponibles y los enriquece con el nombre de la institución
-    para mostrar información completa al usuario.
+    OPTIMIZADO: Elimina patrón N+1 usando JOIN para mejor performance en primera carga.
+    Una sola query en lugar de N+1 queries separadas.
     
     Returns:
         List[Dict]: Lista de cursos con datos relacionados
@@ -208,37 +207,46 @@ def obtener_cursos() -> List[Dict[str, Any]]:
         - pages/cursos.py: Datos para AG Grid y tabla
         - Filtros y búsquedas en tiempo real
     
-    Patrón de carga:
-        - Carga todos los cursos primero
-        - Hace queries individuales para instituciones (N+1 controlado)
-        - Fallback seguro para datos faltantes
+    OPTIMIZACIÓN COLD START:
+        - Una sola query con JOIN elimina N+1 pattern
+        - Reducción masiva de tiempo en primera carga
+        - Mantiene compatibilidad con código existente
     """
     try:
         with Session(engine) as session:
-            # === CARGA INICIAL ===
-            # Obtener todos los cursos de la base de datos
-            cursos_db = session.exec(select(Curso)).all()
-            cursos_list = []
+            print("[PERFORMANCE] obtener_cursos() - Iniciando query optimizada con JOIN")
             
-            # === ENRIQUECIMIENTO DE DATOS ===
-            # Para cada curso, obtener el nombre de su institución
-            for curso in cursos_db:
-                # Query individual para institución (patrón N+1 controlado)
-                institucion = session.get(Institucion, curso.institucion_id) if curso.institucion_id else None
-                
-                # Construcción del diccionario de respuesta
+            # === QUERY OPTIMIZADA CON JOIN ===
+            # Una sola query elimina el patrón N+1 anterior
+            # Carga cursos + institución en una sola operación
+            query = select(
+                Curso.id,
+                Curso.nombre,
+                Curso.nivel,
+                Curso.requisitos_ingreso,
+                Curso.duracion_numero,
+                Curso.duracion_unidad,
+                Curso.informacion,
+                Institucion.nombre.label('institucion_nombre')
+            ).join(Institucion, Curso.institucion_id == Institucion.id, isouter=True)
+            
+            result = session.exec(query).all()
+            
+            # === CONSTRUCCIÓN OPTIMIZADA ===
+            cursos_list = []
+            for row in result:
                 cursos_list.append({
-                    "id": curso.id,
-                    "nombre": curso.nombre,
-                    "nivel": curso.nivel or "N/A",                    # Fallback para datos faltantes
-                    "requisitos_ingreso": curso.requisitos_ingreso or "N/A",
-                    "duracion_numero": curso.duracion_numero,
-                    "duracion_unidad": curso.duracion_unidad,
-                    "informacion": curso.informacion,
-                    "institucion": institucion.nombre if institucion else "N/A",  # Fallback seguro
+                    "id": row[0],
+                    "nombre": row[1],
+                    "nivel": row[2] or "N/A",                    # Fallback para datos faltantes
+                    "requisitos_ingreso": row[3] or "N/A",
+                    "duracion_numero": row[4],
+                    "duracion_unidad": row[5],
+                    "informacion": row[6],
+                    "institucion": row[7] or "N/A",  # Nombre de institución desde JOIN
                 })
             
-            print(f"[LOG] Cursos obtenidos: {len(cursos_list)}")
+            print(f"[PERFORMANCE] obtener_cursos() - ✅ OPTIMIZADO: {len(cursos_list)} cursos en 1 query (vs {len(cursos_list) + 1} queries antes)")
             return cursos_list
     except Exception as e:
         print(f"[ERROR] Error al obtener cursos: {e}")
