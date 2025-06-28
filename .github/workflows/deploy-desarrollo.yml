@@ -32,6 +32,12 @@ jobs:
         run: |
           sed -i 's/container_name: saltoestudia-app/container_name: saltoestudia-dev-app/' docker-compose.yml
 
+      - name: Cambiar labels Traefik para desarrollo
+        run: |
+          sed -i 's/saltoestudia.infra.com.uy/desarrollo.saltoestudia.infra.com.uy/g' docker-compose.yml
+          sed -i 's/saltoestudia-frontend/saltoestudia-dev-frontend/g' docker-compose.yml
+          sed -i 's/saltoestudia-backend/saltoestudia-dev-backend/g' docker-compose.yml
+
       - name: Copiar archivos al VPS (rsync)
         run: |
           rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' --exclude='.env' ./ ubuntu@150.230.30.198:/srv/docker/saltoestudia-desarrollo/
