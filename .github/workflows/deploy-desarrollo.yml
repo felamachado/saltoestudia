@@ -30,7 +30,7 @@ jobs:
 
       - name: Copiar archivos al VPS (rsync)
         run: |
-          rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' ./ ubuntu@150.230.30.198:/srv/docker/saltoestudia-desarrollo/
+          rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' --exclude='.env' ./ ubuntu@150.230.30.198:/srv/docker/saltoestudia-desarrollo/
 
       - name: Ejecutar deploy en el VPS
         run: |
