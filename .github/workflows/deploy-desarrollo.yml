@@ -36,7 +36,8 @@ jobs:
         run: |
           ssh ubuntu@150.230.30.198 '
             cd /srv/docker/saltoestudia-desarrollo && \
-            docker compose down || true && \
+            docker compose down --remove-orphans || true && \
+            docker rm -f saltoestudia-app || true && \
             docker compose up -d --build
           '
 
