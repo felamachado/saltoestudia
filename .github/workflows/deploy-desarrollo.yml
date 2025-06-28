@@ -18,7 +18,9 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Agregar VPS a known_hosts
-        run: ssh-keyscan 150.230.30.198 >> ~/.ssh/known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan 150.230.30.198 >> ~/.ssh/known_hosts
 
       - name: Copiar archivos al VPS (rsync)
         run: |
