@@ -17,47 +17,170 @@ Desarrollado con **Reflex** (Python) + **SQLite** + **Docker**, incluye gestión
 - 🐳 **Docker optimizado** con hot-reload
 - 🚀 **Despliegue VPS automatizado** con Traefik
 
-## 🚀 Inicio Rápido
+## 🚀 **Arranque Rápido**
 
-### Prerrequisitos
-- Python 3.8+
-- Reflex CLI: `pip install reflex`
-- Docker (opcional, para producción)
-
-### 🔧 Desarrollo Local
-
+### **Opción 1: Comando Directo (Recomendado)**
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/felamachado/saltoestudia.git
-cd saltoestudia
+# Desde cualquier carpeta
+~/Escritorio/Proyectos/saltoestudia/scripts/arrancar_app.sh
 
-# 2. Arrancar la aplicación (RECOMENDADO)
+# O si estás en la carpeta del proyecto
 ./scripts/arrancar_app.sh
 ```
 
-**¡Listo!** La aplicación estará disponible en:
-- **Frontend:** http://localhost:3000
-- **Backend:** http://localhost:8000
-- **Admin:** http://localhost:3000/admin
-
-### 🐳 Desarrollo con Docker
-
+### **Opción 2: Alias Global (Más Fácil)**
 ```bash
-# Ejecutar en modo desarrollo (hot-reload)
-./run-dev.sh
+# Instalar alias (solo una vez)
+cd ~/Escritorio/Proyectos/saltoestudia
+./install-alias.sh
 
-# Ejecutar en modo producción local
-./run-prod.sh
+# Usar desde cualquier carpeta
+saltoestudia
 ```
 
-### 🌐 Despliegue en VPS
-
+### **Opción 3: Script Global**
 ```bash
-# Despliegue automatizado a VPS Oracle Cloud
-./deploy-to-vps.sh
+# Desde cualquier carpeta
+~/Escritorio/Proyectos/saltoestudia/start.sh
 ```
 
-**Resultado:** https://saltoestudia.infra.com.uy
+## 🔧 **Características de los Scripts**
+
+### ✅ **Completamente No-Interactivos**
+- **Funcionan en VPS y entornos automatizados**
+- **No requieren confirmaciones manuales**
+- **Ideal para CI/CD y despliegues automáticos**
+
+### 🛡️ **Gestión Automática de Procesos**
+- **Detecta y detiene procesos anteriores automáticamente**
+- **Limpia puertos ocupados sin preguntar**
+- **Verifica dependencias e instala si es necesario**
+
+### 📍 **Ejecución desde Cualquier Ubicación**
+- **No necesitas navegar al directorio del proyecto**
+- **Scripts detectan automáticamente la ubicación correcta**
+- **Funcionan desde cualquier carpeta del sistema**
+
+## 🌐 **Acceso a la Aplicación**
+
+Una vez arrancada, la aplicación estará disponible en:
+
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:8000  
+- **Admin**: http://localhost:3000/admin
+
+## 🛠️ **Scripts Disponibles**
+
+### **`scripts/arrancar_app.sh`**
+Script principal que combina limpieza de puertos y arranque de Reflex.
+
+**Características:**
+- ✅ Limpia puertos 3000 y 8000 automáticamente
+- ✅ Detiene procesos de Reflex anteriores
+- ✅ Verifica dependencias (instala Reflex si es necesario)
+- ✅ Arranca con configuración optimizada
+- ✅ Funciona desde cualquier carpeta
+
+### **`scripts/limpiar_puertos.sh`**
+Limpia puertos ocupados sin interacción manual.
+
+**Características:**
+- ✅ Mata procesos en puertos 3000 y 8000 automáticamente
+- ✅ Muestra información detallada de procesos
+- ✅ Verificación post-limpieza
+- ✅ Compatible con VPS y entornos automatizados
+
+### **`start.sh`**
+Script global que funciona desde cualquier ubicación.
+
+**Características:**
+- ✅ Detecta automáticamente la ubicación del proyecto
+- ✅ Redirige al script de arranque principal
+- ✅ Validación de estructura del proyecto
+
+### **`install-alias.sh`**
+Instala un alias global para facilitar el arranque.
+
+**Características:**
+- ✅ Detecta automáticamente el shell (bash/zsh)
+- ✅ Instala alias en el archivo de configuración correcto
+- ✅ Actualiza alias existentes automáticamente
+- ✅ Recarga configuración del shell
+
+## 🔍 **Solución de Problemas**
+
+### **Error: "rxconfig.py not found"**
+```bash
+# Solución: Navega al directorio correcto
+cd ~/Escritorio/Proyectos/saltoestudia
+./scripts/arrancar_app.sh
+```
+
+### **Error: "Puerto ya en uso"**
+```bash
+# Los scripts limpian automáticamente, pero si persiste:
+./scripts/limpiar_puertos.sh
+```
+
+### **Error: "Reflex no está instalado"**
+```bash
+# Los scripts instalan automáticamente, pero si falla:
+pip install reflex
+```
+
+### **Error: "Permisos denegados"**
+```bash
+# Dar permisos de ejecución
+chmod +x scripts/*.sh
+chmod +x *.sh
+```
+
+## 🐳 **Docker (Producción)**
+
+Para el entorno de producción, usa Docker:
+
+```bash
+# Construir imagen
+docker build -t saltoestudia .
+
+# Ejecutar contenedor
+docker run -p 3000:3000 -p 8000:8000 saltoestudia
+```
+
+**Nota**: El contenedor Docker está configurado para producción y no expone puertos para desarrollo local. Para desarrollo, usa los scripts locales.
+
+## 📋 **Requisitos del Sistema**
+
+- **Python 3.8+**
+- **pip**
+- **lsof** (normalmente instalado por defecto)
+- **bash** o **zsh**
+
+## 🔄 **Actualizaciones**
+
+Los scripts se actualizan automáticamente con el proyecto. Para forzar una actualización:
+
+```bash
+# Reinstalar alias
+./install-alias.sh
+
+# O limpiar y reinstalar
+rm ~/.zshrc  # (hacer backup antes)
+./install-alias.sh
+```
+
+## 📞 **Soporte**
+
+Si encuentras problemas:
+
+1. **Verifica que estés en la carpeta correcta**
+2. **Ejecuta el script de limpieza manualmente**
+3. **Revisa los logs de error**
+4. **Asegúrate de tener permisos de ejecución**
+
+---
+
+**Desarrollado con ❤️ para la educación**
 
 ## 🏗️ Arquitectura
 

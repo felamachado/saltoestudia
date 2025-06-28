@@ -4,13 +4,14 @@
 # Script de Limpieza de Puertos para Salto Estudia
 # =============================================================================
 # 
-# Este script mata cualquier proceso que esté ocupando los puertos 8000 y 3000,
-# que son utilizados por Reflex para el backend y frontend respectivamente.
+# Este script identifica y mata procesos que están ocupando los puertos
+# utilizados por la aplicación Salto Estudia (3000 y 8000).
 #
 # Uso: ./scripts/limpiar_puertos.sh
+#      O desde cualquier carpeta: /ruta/completa/saltoestudia/scripts/limpiar_puertos.sh
 #
 # Compatibilidad: Linux (Ubuntu, Debian, CentOS, etc.)
-# Requisitos: lsof (normalmente instalado por defecto)
+# Entornos: Local, VPS, CI/CD, Docker
 # =============================================================================
 
 set -e  # Salir si hay algún error
@@ -39,87 +40,67 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Verificar si lsof está instalado
-if ! command -v lsof &> /dev/null; then
-    print_error "lsof no está instalado. Instalando..."
-    if command -v apt-get &> /dev/null; then
-        sudo apt-get update && sudo apt-get install -y lsof
-    elif command -v yum &> /dev/null; then
-        sudo yum install -y lsof
-    elif command -v dnf &> /dev/null; then
-        sudo dnf install -y lsof
-    else
-        print_error "No se pudo instalar lsof automáticamente. Por favor instálalo manualmente."
-        exit 1
-    fi
-fi
-
-print_status "Iniciando limpieza de puertos para Salto Estudia..."
+print_status "🧹 Iniciando limpieza de puertos para Salto Estudia..."
 echo ""
 
-# Puertos a limpiar
-PUERTOS=(8000 3000)
+# Puertos a verificar
+PORTS=(3000 8000)
+PROCESSES_FOUND=false
 
-for puerto in "${PUERTOS[@]}"; do
-    print_status "Verificando puerto $puerto..."
+# Función para verificar y matar procesos en un puerto
+check_and_kill_port() {
+    local port=$1
+    local processes=$(lsof -ti:$port 2>/dev/null)
     
-    # Buscar procesos usando el puerto
-    pids=$(lsof -ti tcp:$puerto 2>/dev/null || true)
-    
-    if [ -z "$pids" ]; then
-        print_success "Puerto $puerto está libre."
-    else
-        print_warning "Encontrados procesos en puerto $puerto:"
+    if [ -n "$processes" ]; then
+        print_warning "⚠️  Puerto $port está ocupado por los siguientes procesos:"
+        echo ""
         
-        # Mostrar información de los procesos
-        for pid in $pids; do
-            if [ -n "$pid" ]; then
-                proceso_info=$(ps -p $pid -o pid,ppid,cmd --no-headers 2>/dev/null || echo "Proceso $pid")
-                echo "  - PID: $pid | $proceso_info"
+        for pid in $processes; do
+            local process_info=$(ps -p $pid -o pid,ppid,cmd --no-headers 2>/dev/null)
+            if [ -n "$process_info" ]; then
+                echo "   PID: $pid - $process_info"
             fi
         done
-        
-        # Preguntar si matar los procesos
-        echo ""
-        read -p "¿Deseas matar estos procesos? (y/N): " -n 1 -r
         echo ""
         
-        if [[ $REPLY =~ ^[Yy]$ ]]; then
-            for pid in $pids; do
-                if [ -n "$pid" ]; then
-                    print_status "Matando proceso $pid..."
-                    if kill -9 $pid 2>/dev/null; then
-                        print_success "Proceso $pid terminado exitosamente."
-                    else
-                        print_warning "No se pudo terminar el proceso $pid (puede que ya no exista)."
-                    fi
-                fi
-            done
+        print_status "🔄 Matando procesos en puerto $port automáticamente..."
+        echo "$processes" | xargs -r kill -9
+        sleep 1
+        
+        # Verificar si se mataron correctamente
+        if lsof -ti:$port >/dev/null 2>&1; then
+            print_error "❌ No se pudieron matar todos los procesos en puerto $port"
         else
-            print_warning "Procesos en puerto $puerto no fueron terminados."
+            print_success "✅ Puerto $port liberado correctamente"
         fi
-    fi
-    
-    echo ""
-done
-
-# Verificación final
-print_status "Verificación final de puertos..."
-echo ""
-
-for puerto in "${PUERTOS[@]}"; do
-    pids=$(lsof -ti tcp:$puerto 2>/dev/null || true)
-    if [ -z "$pids" ]; then
-        print_success "✓ Puerto $puerto está libre y listo para usar."
+        echo ""
+        PROCESSES_FOUND=true
     else
-        print_warning "⚠ Puerto $puerto aún tiene procesos activos."
+        print_success "✅ Puerto $port está libre"
     fi
+}
+
+# Verificar cada puerto
+for port in "${PORTS[@]}"; do
+    check_and_kill_port $port
 done
 
-echo ""
-print_success "Limpieza completada. Ahora puedes arrancar Reflex sin problemas."
-echo ""
-print_status "Próximos pasos:"
-echo "1. Navega a la carpeta raíz del proyecto: cd ~/Escritorio/Proyectos/saltoestudia"
-echo "2. Arranca Reflex: reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000"
-echo "" 
+# Resumen final
+if [ "$PROCESSES_FOUND" = true ]; then
+    print_success "🎉 Limpieza de puertos completada"
+    echo ""
+    print_status "📋 Resumen:"
+    print_status "   - Puerto 3000: Libre para frontend"
+    print_status "   - Puerto 8000: Libre para backend"
+    echo ""
+    print_status "✅ Ya puedes arrancar la aplicación con:"
+    print_status "   ./scripts/arrancar_app.sh"
+    echo ""
+else
+    print_success "🎉 Todos los puertos ya estaban libres"
+    echo ""
+    print_status "✅ Ya puedes arrancar la aplicación con:"
+    print_status "   ./scripts/arrancar_app.sh"
+    echo ""
+fi 
