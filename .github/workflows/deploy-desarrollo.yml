@@ -17,6 +17,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
+      - name: Agregar VPS a known_hosts
+        run: ssh-keyscan 150.230.30.198 >> ~/.ssh/known_hosts
+
       - name: Copiar archivos al VPS (rsync)
         run: |
           rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' ./ ubuntu@150.230.30.198:/srv/docker/saltoestudia-desarrollo/
