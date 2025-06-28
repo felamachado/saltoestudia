@@ -28,6 +28,10 @@ jobs:
       - name: Debug - Mostrar known_hosts
         run: cat ~/.ssh/known_hosts
 
+      - name: Cambiar nombre de contenedor para desarrollo
+        run: |
+          sed -i 's/container_name: saltoestudia-app/container_name: saltoestudia-dev-app/' docker-compose.yml
+
       - name: Copiar archivos al VPS (rsync)
         run: |
           rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' --exclude='.env' ./ ubuntu@150.230.30.198:/srv/docker/saltoestudia-desarrollo/
