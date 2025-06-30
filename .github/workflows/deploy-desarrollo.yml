@@ -20,7 +20,7 @@ jobs:
       - name: Agregar VPS a known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan 150.230.30.198 >> ~/.ssh/known_hosts
+          ssh-keyscan ${{ secrets.VPS_HOST_IP }} >> ~/.ssh/known_hosts
 
       - name: Debug - Mostrar llaves cargadas en el agente
         run: ssh-add -l
@@ -40,11 +40,11 @@ jobs:
 
       - name: Copiar archivos al VPS (rsync)
         run: |
-          rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' --exclude='.env' ./ ubuntu@150.230.30.198:/srv/docker/saltoestudia-desarrollo/
+          rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' --exclude='.env' ./ ${{ secrets.VPS_HOST }}:/srv/docker/saltoestudia-desarrollo/
 
       - name: Ejecutar deploy en el VPS
         run: |
-          ssh ubuntu@150.230.30.198 '
+          ssh ${{ secrets.VPS_HOST }} '
             cd /srv/docker/saltoestudia-desarrollo && \
             docker compose down --remove-orphans || true && \
             docker rm -f saltoestudia-dev-app || true && \
