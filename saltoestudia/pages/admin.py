@@ -206,6 +206,19 @@ def curso_form_dialog() -> rx.Component:
                             align_items="start", width="100%",
                         ),
                         
+                        # Campo Lugar
+                        rx.vstack(
+                            rx.text("Lugar", **ComponentStyle.FORM_LABEL),
+                            rx.select(
+                                State.opciones_lugar,
+                                value=State.form_lugar,
+                                on_change=State.set_form_lugar,
+                                placeholder="Seleccionar lugar",
+                                **ComponentStyle.FORM_SELECT,
+                            ),
+                            align_items="start", width="100%",
+                        ),
+                        
                         # Campo Información (Área de texto)
                         rx.vstack(
                             rx.text("Información Adicional", **ComponentStyle.FORM_LABEL),
@@ -498,6 +511,7 @@ def render_curso_row(curso: Dict[str, Any]) -> rx.Component:
             )
         ),
         create_course_table_cell(curso["requisitos_ingreso"]),
+        create_course_table_cell(curso["lugar"]),
         create_course_table_cell(
             rx.cond(
                 curso["informacion"],
@@ -547,6 +561,12 @@ def render_curso_card_mobile(curso: Dict[str, Any]) -> rx.Component:
                 rx.hstack(
                     rx.text("Requisitos:", font_weight="bold", color=theme.Color.GRAY_900),
                     rx.text(curso["requisitos_ingreso"], color=theme.Color.GRAY_700),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.hstack(
+                    rx.text("Lugar:", font_weight="bold", color=theme.Color.GRAY_900),
+                    rx.text(curso["lugar"], color=theme.Color.GRAY_700),
                     spacing="2",
                     align="center",
                 ),
@@ -655,7 +675,7 @@ def admin_content_desktop() -> rx.Component:
                 rx.table.root(
                     rx.table.header(
                         create_course_table_header([
-                            "Nombre", "Nivel", "Duración", "Requisitos", "Información", "Acciones"
+                            "Nombre", "Nivel", "Duración", "Requisitos", "Lugar", "Información", "Acciones"
                         ])
                     ),
                     rx.table.body(

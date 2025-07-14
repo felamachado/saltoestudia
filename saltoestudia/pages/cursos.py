@@ -61,6 +61,13 @@ def render_curso_card_mobile_public(curso: dict) -> rx.Component:
                     align="center",
                     justify="start",
                 ),
+                rx.hstack(
+                    rx.text("Lugar:", font_weight="bold", color=theme.Color.GRAY_900, font_size="3"),
+                    rx.text(curso["lugar"], color=theme.Color.GRAY_700, font_size="3"),
+                    spacing="2",
+                    align="center",
+                    justify="start",
+                ),
                 rx.cond(
                     curso["informacion"],
                     rx.vstack(
@@ -101,89 +108,118 @@ def render_curso_card_mobile_public(curso: dict) -> rx.Component:
 def cursos_filters_desktop() -> rx.Component:
     """Filtros para versión desktop."""
     return rx.box(
-        # Filtros de búsqueda
-        rx.vstack(
-            # Primera fila de filtros
-            rx.hstack(
-                rx.vstack(
-                    rx.text(
-                        "Nivel:", 
-                        font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
-                        font_size="2",
-                        color=theme.Color.GRAY_900,
-                        font_family=theme.Typography.FONT_FAMILY,
-                    ),
-                    rx.select(
-                        ["Todos"] + CursosConstants.NIVELES,
-                        placeholder="Seleccionar...",
-                        value=rx.cond(State.nivel_seleccionado == "", "Todos", State.nivel_seleccionado),
-                        on_change=State.actualizar_nivel_seleccionado,
-                        width="100%",
-                        **ComponentStyle.FORM_SELECT,
-                    ),
-                    spacing="1",
-                    align="start",
-                    width=["100%", "48%", "23%", "23%"],
-                ),
-                rx.vstack(
-                    rx.text(
-                        "Req. Ingreso:", 
-                        font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
-                        font_size="2",
-                        color=theme.Color.GRAY_900,
-                        font_family=theme.Typography.FONT_FAMILY,
-                    ),
-                    rx.select(
-                        ["Todos"] + CursosConstants.REQUISITOS_INGRESO,
-                        placeholder="Seleccionar...",
-                        value=rx.cond(State.requisito_seleccionado == "", "Todos", State.requisito_seleccionado),
-                        on_change=State.actualizar_requisito_seleccionado,
-                        width="100%",
-                        **ComponentStyle.FORM_SELECT,
-                    ),
-                    spacing="1",
-                    align="start",
-                    width=["100%", "48%", "23%", "23%"],
-                ),
-                rx.vstack(
-                    rx.text(
-                        "Institución:", 
-                        font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
-                        font_size="2",
-                        color=theme.Color.GRAY_900,
-                        font_family=theme.Typography.FONT_FAMILY,
-                    ),
-                    rx.select(
-                        State.instituciones_nombres,
-                        placeholder="Seleccionar...",
-                        value=rx.cond(State.institucion_seleccionada == "", "Todos", State.institucion_seleccionada),
-                        on_change=State.actualizar_institución_seleccionada,
-                        width="100%",
-                        **ComponentStyle.FORM_SELECT,
-                    ),
-                    spacing="1",
-                    align="start",
-                    width=["100%", "48%", "23%", "23%"],
-                ),
-                rx.box(
-                    rx.button(
-                        "Limpiar Filtros",
-                        on_click=State.limpiar_filtros,
-                        **ButtonStyle.secondary(),
-                        width="100%",
-                    ),
-                    width=["100%", "48%", "23%", "23%"],
-                    align_self="end",
-                ),
-                justify="between",
-                spacing="2",
-                width="100%",
-                wrap="wrap",
-                align_items="end",
-            ),
-            
-            spacing="3",
+        # Input de búsqueda y botón en la misma línea
+        rx.hstack(
+                    rx.input(
+            placeholder="Buscar por nombre o información...",
+            value=State.busqueda_texto,
+            on_change=State.actualizar_busqueda_texto,
+            **ComponentStyle.FORM_INPUT,
             width="100%",
+        ),
+            rx.button(
+                "Limpiar Filtros",
+                on_click=State.limpiar_filtros,
+                **ButtonStyle.secondary(),
+                width="160px",
+                min_width="120px",
+                margin_left="8px",
+            ),
+            width="100%",
+            spacing="2",
+            margin_bottom="1.5em",
+        ),
+        # Filtros de búsqueda (dropdowns)
+        rx.hstack(
+            rx.vstack(
+                rx.text(
+                    "Nivel:", 
+                    font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
+                    font_size="2",
+                    color=theme.Color.GRAY_900,
+                    font_family=theme.Typography.FONT_FAMILY,
+                    margin_bottom="2px",
+                ),
+                rx.select(
+                    ["Todos"] + CursosConstants.NIVELES,
+                    placeholder="Seleccionar...",
+                    value=rx.cond(State.nivel_seleccionado == "", "Todos", State.nivel_seleccionado),
+                    on_change=State.actualizar_nivel_seleccionado,
+                    width="100%",
+                    **ComponentStyle.FORM_SELECT,
+                ),
+                spacing="1",
+                align="start",
+                width=["100%", "48%", "23%", "23%"],
+            ),
+            rx.vstack(
+                rx.text(
+                    "Req. Ingreso:", 
+                    font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
+                    font_size="2",
+                    color=theme.Color.GRAY_900,
+                    font_family=theme.Typography.FONT_FAMILY,
+                    margin_bottom="2px",
+                ),
+                rx.select(
+                    ["Todos"] + CursosConstants.REQUISITOS_INGRESO,
+                    placeholder="Seleccionar...",
+                    value=rx.cond(State.requisito_seleccionado == "", "Todos", State.requisito_seleccionado),
+                    on_change=State.actualizar_requisito_seleccionado,
+                    width="100%",
+                    **ComponentStyle.FORM_SELECT,
+                ),
+                spacing="1",
+                align="start",
+                width=["100%", "48%", "23%", "23%"],
+            ),
+            rx.vstack(
+                rx.text(
+                    "Institución:", 
+                    font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
+                    font_size="2",
+                    color=theme.Color.GRAY_900,
+                    font_family=theme.Typography.FONT_FAMILY,
+                    margin_bottom="2px",
+                ),
+                rx.select(
+                    State.instituciones_nombres,
+                    placeholder="Seleccionar...",
+                    value=rx.cond(State.institucion_seleccionada == "", "Todos", State.institucion_seleccionada),
+                    on_change=State.actualizar_institución_seleccionada,
+                    width="100%",
+                    **ComponentStyle.FORM_SELECT,
+                ),
+                spacing="1",
+                align="start",
+                width=["100%", "48%", "23%", "23%"],
+            ),
+            rx.vstack(
+                rx.text(
+                    "Lugar:", 
+                    font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
+                    font_size="2",
+                    color=theme.Color.GRAY_900,
+                    font_family=theme.Typography.FONT_FAMILY,
+                    margin_bottom="2px",
+                ),
+                rx.select(
+                    State.ciudades_nombres,
+                    placeholder="Seleccionar...",
+                    value=rx.cond(State.lugar_seleccionado == "", "Todas", State.lugar_seleccionado),
+                    on_change=State.actualizar_lugar_seleccionado,
+                    width="100%",
+                    **ComponentStyle.FORM_SELECT,
+                ),
+                spacing="1",
+                align="start",
+                width=["100%", "48%", "23%", "23%"],
+            ),
+            justify="between",
+            spacing="2",
+            width="100%",
+            wrap="wrap",
+            align_items="end",
         ),
         width="100%",
         margin_x="auto",
@@ -194,6 +230,14 @@ def cursos_filters_desktop() -> rx.Component:
 def cursos_filters_mobile() -> rx.Component:
     """Filtros para versión móvil."""
     return rx.vstack(
+        rx.input(
+            placeholder="Buscar por nombre o información...",
+            value=State.busqueda_texto,
+            on_change=State.actualizar_busqueda_texto,
+            width="100%",
+            **ComponentStyle.FORM_INPUT,
+            margin_bottom="1.5em",
+        ),
         rx.vstack(
             rx.text(
                 "Nivel:", 
@@ -201,6 +245,7 @@ def cursos_filters_mobile() -> rx.Component:
                 color=theme.Color.GRAY_900,
                 font_family=theme.Typography.FONT_FAMILY,
                 font_size="3",
+                margin_bottom="2px",
             ),
             rx.select(
                 ["Todos"] + CursosConstants.NIVELES,
@@ -210,7 +255,7 @@ def cursos_filters_mobile() -> rx.Component:
                 width="100%",
                 **ComponentStyle.FORM_SELECT,
             ),
-            spacing="2",
+            spacing="1",
             align="start",
             width="100%",
         ),
@@ -221,6 +266,7 @@ def cursos_filters_mobile() -> rx.Component:
                 color=theme.Color.GRAY_900,
                 font_family=theme.Typography.FONT_FAMILY,
                 font_size="3",
+                margin_bottom="2px",
             ),
             rx.select(
                 ["Todos"] + CursosConstants.REQUISITOS_INGRESO,
@@ -230,7 +276,7 @@ def cursos_filters_mobile() -> rx.Component:
                 width="100%",
                 **ComponentStyle.FORM_SELECT,
             ),
-            spacing="2",
+            spacing="1",
             align="start",
             width="100%",
         ),
@@ -241,6 +287,7 @@ def cursos_filters_mobile() -> rx.Component:
                 color=theme.Color.GRAY_900,
                 font_family=theme.Typography.FONT_FAMILY,
                 font_size="3",
+                margin_bottom="2px",
             ),
             rx.select(
                 State.instituciones_nombres,
@@ -250,7 +297,28 @@ def cursos_filters_mobile() -> rx.Component:
                 width="100%",
                 **ComponentStyle.FORM_SELECT,
             ),
-            spacing="2",
+            spacing="1",
+            align="start",
+            width="100%",
+        ),
+        rx.vstack(
+            rx.text(
+                "Lugar:", 
+                font_weight=theme.Typography.FONT_WEIGHTS["semibold"], 
+                color=theme.Color.GRAY_900,
+                font_family=theme.Typography.FONT_FAMILY,
+                font_size="3",
+                margin_bottom="2px",
+            ),
+            rx.select(
+                State.ciudades_nombres,
+                placeholder="Seleccionar lugar...",
+                value=rx.cond(State.lugar_seleccionado == "", "Todas", State.lugar_seleccionado),
+                on_change=State.actualizar_lugar_seleccionado,
+                width="100%",
+                **ComponentStyle.FORM_SELECT,
+            ),
+            spacing="1",
             align="start",
             width="100%",
         ),
@@ -259,6 +327,7 @@ def cursos_filters_mobile() -> rx.Component:
             on_click=State.limpiar_filtros,
             **ButtonStyle.secondary(),
             width="100%",
+            margin_top="1em",
         ),
         spacing="4",
         width="100%",
@@ -304,6 +373,7 @@ def cursos_content_desktop() -> rx.Component:
                         rx.table.cell("Requisitos"),
                         rx.table.cell("Institución"),
                         rx.table.cell("Información"),
+                        rx.table.cell("Lugar"),
                     )
                 ),
                 rx.table.body(
@@ -316,6 +386,7 @@ def cursos_content_desktop() -> rx.Component:
                             rx.table.cell(curso["requisitos_ingreso"]),
                             rx.table.cell(curso["institucion"]),
                             rx.table.cell(curso["informacion"]),
+                            rx.table.cell(curso["lugar"]),
                         )
                     )
                 ),
@@ -424,6 +495,7 @@ def render_curso_row_public(curso_data: list) -> rx.Component:
         create_course_table_cell(curso_data[3]),  # Requisitos
         create_course_table_cell(curso_data[4]),  # Institución
         create_course_table_cell(curso_data[5]),  # Información
+        create_course_table_cell(curso_data[6]),  # Lugar
         **ComponentStyle.COURSE_TABLE_ROW_HOVER,
     )
 

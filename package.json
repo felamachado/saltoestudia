@@ -1,4 +1,12 @@
 {
+  "scripts": {
+    "dev": "reflex run",
+    "dev-clean": "./scripts/reflex-clean.sh",
+    "build": "reflex export",
+    "export": "reflex export",
+    "init": "reflex init",
+    "run": "reflex run"
+  },
   "dependencies": {
     "@chakra-ui/react": "^2.10.3",
     "@emotion/react": "^11.13.3",

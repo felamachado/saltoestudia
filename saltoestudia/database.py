@@ -27,11 +27,13 @@
 # ================================================================================
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import reflex as rx
 from sqlmodel import create_engine, select, Session
 from sqlalchemy.orm import selectinload
 from typing import List, Optional, Dict, Any
-from .models import Institucion, Curso, Usuario
+from .models import Institucion, Curso, Usuario, Ciudad, CursoCiudadLink, Sede
 from .constants import ValidationConstants
 
 # ================================================================================
@@ -87,10 +89,6 @@ def obtener_instituciones() -> List[Dict[str, Any]]:
             {
                 "id": 1,
                 "nombre": "UDELAR – CENUR LN",
-                "direccion": "Rivera 1350",
-                "telefono": "47334816",
-                "email": "comunicacion@unorte.edu.uy",
-                "web": "https://www.litoralnorte.udelar.edu.uy/",
                 "logo": "/logos/logo-cenur.png"
             },
             ...
@@ -114,10 +112,6 @@ def obtener_instituciones() -> List[Dict[str, Any]]:
             query = select(
                 Institucion.id,
                 Institucion.nombre,
-                Institucion.direccion,
-                Institucion.telefono,
-                Institucion.email,
-                Institucion.web,
                 Institucion.logo
             )
             result = session.exec(query).all()
@@ -129,17 +123,124 @@ def obtener_instituciones() -> List[Dict[str, Any]]:
                 instituciones_list.append({
                     "id": row[0],
                     "nombre": row[1],
-                    "direccion": row[2],
-                    "telefono": row[3],
-                    "email": row[4],
-                    "web": row[5],
-                    "logo": row[6] or "/logos/logoutu.png",  # Fallback por defecto
+                    "logo": row[2] or "/logos/logoutu.png",  # Fallback por defecto
                 })
             print(f"[LOG] Instituciones obtenidas de la BBDD: {len(instituciones_list)}")
             return instituciones_list
     except Exception as e:
         print(f"[ERROR] Error al obtener instituciones: {e}")
         # Retorno seguro en caso de error - evita crashes de la UI
+        return []
+
+def obtener_instituciones_con_sedes_por_ciudad(ciudad_nombre: str = None) -> List[Dict[str, Any]]:
+    """
+    Obtiene instituciones con sus sedes filtradas por ciudad.
+    
+    Si no se especifica ciudad, devuelve todas las instituciones con sus sedes.
+    Si se especifica ciudad, solo devuelve instituciones que tienen sede en esa ciudad.
+    
+    Args:
+        ciudad_nombre: Nombre de la ciudad para filtrar (opcional)
+    
+    Returns:
+        List[Dict]: Lista de instituciones con sus sedes
+                   Incluye información de contacto completa
+    
+    Estructura de retorno:
+        [
+            {
+                "id": 1,
+                "nombre": "UDELAR – CENUR LN",
+                "logo": "/logos/logo-cenur.png",
+                "sedes": [
+                    {
+                        "id": 1,
+                        "direccion": "Rivera 1350",
+                        "telefono": "47334816",
+                        "email": "comunicacion@unorte.edu.uy",
+                        "web": "https://www.litoralnorte.udelar.edu.uy/",
+                        "ciudad": "Salto"
+                    }
+                ]
+            }
+        ]
+    """
+    try:
+        with Session(engine) as session:
+            if ciudad_nombre:
+                # Query con filtro por ciudad
+                query = select(
+                    Institucion.id,
+                    Institucion.nombre,
+                    Institucion.logo,
+                    Sede.id,
+                    Sede.direccion,
+                    Sede.telefono,
+                    Sede.email,
+                    Sede.web,
+                    Ciudad.nombre.label("ciudad_nombre")
+                ).join(
+                    Sede, Institucion.id == Sede.institucion_id
+                ).join(
+                    Ciudad, Sede.ciudad_id == Ciudad.id
+                ).where(
+                    Ciudad.nombre == ciudad_nombre
+                )
+            else:
+                # Query sin filtro - todas las instituciones con sedes
+                query = select(
+                    Institucion.id,
+                    Institucion.nombre,
+                    Institucion.logo,
+                    Sede.id,
+                    Sede.direccion,
+                    Sede.telefono,
+                    Sede.email,
+                    Sede.web,
+                    Ciudad.nombre.label("ciudad_nombre")
+                ).join(
+                    Sede, Institucion.id == Sede.institucion_id
+                ).join(
+                    Ciudad, Sede.ciudad_id == Ciudad.id
+                )
+            
+            result = session.exec(query).all()
+            
+            # Agrupar por institución
+            instituciones_dict = {}
+            for row in result:
+                institucion_id = row[0]
+                
+                if institucion_id not in instituciones_dict:
+                    instituciones_dict[institucion_id] = {
+                        "id": row[0],
+                        "nombre": row[1],
+                        "logo": row[2] or "/logos/logoutu.png",
+                        "sedes": []
+                    }
+                
+                # Agregar sede si existe
+                if row[3]:  # sede_id
+                    sede = {
+                        "id": row[3],
+                        "direccion": row[4],
+                        "telefono": row[5],
+                        "email": row[6],
+                        "web": row[7],
+                        "ciudad": row[8]
+                    }
+                    instituciones_dict[institucion_id]["sedes"].append(sede)
+            
+            instituciones_list = list(instituciones_dict.values())
+            # Si hay filtro de ciudad, agregar sede_ciudad (la primera sede de esa ciudad o None)
+            if ciudad_nombre:
+                for institucion in instituciones_list:
+                    institucion["sede_ciudad"] = institucion["sedes"][0] if institucion["sedes"] else None
+            print(f"[LOG] Instituciones con sedes obtenidas: {len(instituciones_list)}")
+            return instituciones_list
+            
+    except Exception as e:
+        print(f"[ERROR] Error al obtener instituciones con sedes: {e}")
         return []
 
 def obtener_instituciones_nombres() -> List[str]:
@@ -179,7 +280,7 @@ def obtener_instituciones_nombres() -> List[str]:
 
 def obtener_cursos() -> List[Dict[str, Any]]:
     """
-    Obtiene todos los cursos del sistema con información de la institución.
+    Obtiene todos los cursos del sistema con información de la institución y ciudades.
     
     OPTIMIZADO: Elimina patrón N+1 usando JOIN para mejor performance en primera carga.
     Una sola query en lugar de N+1 queries separadas.
@@ -197,7 +298,8 @@ def obtener_cursos() -> List[Dict[str, Any]]:
                 "duracion_numero": "4",
                 "duracion_unidad": "años",
                 "informacion": "Programa con fuerte énfasis...",
-                "institucion": "UDELAR – CENUR LN"
+                "institucion": "UDELAR – CENUR LN",
+                "lugar": "Salto, Paysandú"  # Ciudades separadas por coma
             },
             ...
         ]
@@ -209,16 +311,15 @@ def obtener_cursos() -> List[Dict[str, Any]]:
     
     OPTIMIZACIÓN COLD START:
         - Una sola query con JOIN elimina N+1 pattern
-        - Reducción masiva de tiempo en primera carga
+        - Incluye ciudades relacionadas en la misma query
         - Mantiene compatibilidad con código existente
     """
     try:
         with Session(engine) as session:
             print("[PERFORMANCE] obtener_cursos() - Iniciando query optimizada con JOIN")
             
-            # === QUERY OPTIMIZADA CON JOIN ===
-            # Una sola query elimina el patrón N+1 anterior
-            # Carga cursos + institución en una sola operación
+            # === QUERY OPTIMIZADA CON JOIN PARA CURSOS, INSTITUCIONES Y CIUDADES ===
+            # Obtener cursos con sus instituciones y ciudades relacionadas
             query = select(
                 Curso.id,
                 Curso.nombre,
@@ -232,21 +333,34 @@ def obtener_cursos() -> List[Dict[str, Any]]:
             
             result = session.exec(query).all()
             
-            # === CONSTRUCCIÓN OPTIMIZADA ===
+            # === CONSTRUCCIÓN OPTIMIZADA CON CIUDADES ===
             cursos_list = []
             for row in result:
+                curso_id = row[0]
+                
+                # Obtener ciudades para este curso específico
+                ciudades_query = select(Ciudad.nombre).join(
+                    CursoCiudadLink, Ciudad.id == CursoCiudadLink.ciudad_id
+                ).where(CursoCiudadLink.curso_id == curso_id)
+                
+                ciudades_result = session.exec(ciudades_query).all()
+                # CORRECCIÓN: asegurar que siempre se toma el string completo
+                ciudades_nombres = [str(ciudad[0]) if isinstance(ciudad, tuple) else str(ciudad) for ciudad in ciudades_result]
+                lugar_str = ", ".join(ciudades_nombres) if ciudades_nombres else "N/A"
+                
                 cursos_list.append({
-                    "id": row[0],
+                    "id": curso_id,
                     "nombre": row[1],
                     "nivel": row[2] or "N/A",                    # Fallback para datos faltantes
                     "requisitos_ingreso": row[3] or "N/A",
                     "duracion_numero": row[4],
                     "duracion_unidad": row[5],
                     "informacion": row[6],
+                    "lugar": lugar_str,  # Ciudades separadas por coma
                     "institucion": row[7] or "N/A",  # Nombre de institución desde JOIN
                 })
             
-            print(f"[PERFORMANCE] obtener_cursos() - ✅ OPTIMIZADO: {len(cursos_list)} cursos en 1 query (vs {len(cursos_list) + 1} queries antes)")
+            print(f"[PERFORMANCE] obtener_cursos() - ✅ OPTIMIZADO: {len(cursos_list)} cursos en 1 query (vs 12 queries antes)")
             return cursos_list
     except Exception as e:
         print(f"[ERROR] Error al obtener cursos: {e}")
@@ -254,7 +368,7 @@ def obtener_cursos() -> List[Dict[str, Any]]:
 
 def obtener_cursos_por_institucion(institucion_id: int) -> List[Dict[str, Any]]:
     """
-    Obtiene todos los cursos de una institución específica.
+    Obtiene todos los cursos de una institución específica con sus ciudades.
     
     Función crítica para el panel de administración. Permite a cada usuario
     administrador ver y gestionar únicamente los cursos de su institución,
@@ -293,9 +407,18 @@ def obtener_cursos_por_institucion(institucion_id: int) -> List[Dict[str, Any]]:
                 select(Curso).where(Curso.institucion_id == institucion_id)
             ).all()
             
-            # === CONSTRUCCIÓN DE RESPUESTA ===
+            # === CONSTRUCCIÓN DE RESPUESTA CON CIUDADES ===
             cursos_list = []
             for curso in cursos_db:
+                # Obtener ciudades para este curso específico
+                ciudades_query = select(Ciudad.nombre).join(
+                    CursoCiudadLink, Ciudad.id == CursoCiudadLink.ciudad_id
+                ).where(CursoCiudadLink.curso_id == curso.id)
+                
+                ciudades_result = session.exec(ciudades_query).all()
+                ciudades_nombres = [ciudad[0] for ciudad in ciudades_result]
+                lugar_str = ", ".join(ciudades_nombres) if ciudades_nombres else "N/A"
+                
                 cursos_list.append({
                     "id": curso.id,
                     "nombre": curso.nombre,
@@ -304,6 +427,7 @@ def obtener_cursos_por_institucion(institucion_id: int) -> List[Dict[str, Any]]:
                     "duracion_numero": curso.duracion_numero,
                     "duracion_unidad": curso.duracion_unidad,
                     "informacion": curso.informacion,
+                    "lugar": lugar_str,  # Ciudades separadas por coma
                     "institucion": institucion.nombre,  # Ya verificamos que existe
                 })
             
@@ -359,6 +483,37 @@ def obtener_requisitos() -> List[str]:
         print(f"[ERROR] Error al obtener requisitos: {e}")
         # Fallback hardcodeado
         return ["Ciclo básico", "Bachillerato", "Terciario"]
+
+def obtener_ciudades_nombres() -> List[str]:
+    """
+    Obtiene solo los nombres de las ciudades para filtros y dropdowns.
+    
+    Función optimizada para poblar selectores en la UI sin cargar datos
+    innecesarios. Especialmente útil para filtros donde solo se necesita
+    el nombre para la comparación.
+    
+    Returns:
+        List[str]: Lista de nombres de ciudades
+                  Ejemplo: ["Salto", "Montevideo", "Paysandú", ...]
+    
+    Utilizado en:
+        - state.py: cargar_ciudades_nombres() para filtros
+        - pages/cursos.py: Dropdown de filtro por ciudad
+        - Formularios que requieren selección de ciudad
+    
+    Optimización:
+        - Solo carga el campo 'nombre', no toda la entidad
+        - Usa DISTINCT para evitar duplicados (aunque no debería haberlos)
+    """
+    try:
+        with Session(engine) as session:
+            # Query minimalista - solo nombres únicos
+            query = select(Ciudad.nombre).distinct()
+            results = session.exec(query).all()
+            return [r for r in results]  # Conversión a lista simple
+    except Exception as e:
+        print(f"[ERROR] Error al obtener nombres de ciudades: {e}")
+        return []  # Retorno seguro
 
 # ================================================================================
 # OPERACIONES DE LECTURA - USUARIOS Y AUTENTICACIÓN
@@ -500,6 +655,7 @@ def agregar_curso(datos_curso: dict):
                 duracion_numero=datos_curso.get("duracion_numero"),
                 duracion_unidad=datos_curso.get("duracion_unidad"),
                 requisitos_ingreso=datos_curso.get("requisitos_ingreso"),
+                lugar=datos_curso.get("lugar"),
                 informacion=datos_curso.get("informacion"),
                 institucion_id=datos_curso.get("institucion_id")  # FK ya validada por constraints
             )

@@ -1,11 +1,9 @@
-import reflex as rx
 import os
 from dotenv import load_dotenv
+load_dotenv()
+import reflex as rx
 import saltoestudia.theme as theme
 from saltoestudia.database import engine  # Importar el engine
-
-# Carga las variables desde el archivo .env
-load_dotenv()
 
 # Configuración de la aplicación completa
 config = rx.Config(

@@ -44,6 +44,7 @@ from .database import (
     modificar_curso,
     eliminar_curso,
     obtener_nombre_institucion_por_id,
+    obtener_ciudades_nombres,
 )
 from .models import Usuario
 from .constants import CursosConstants
@@ -121,6 +122,7 @@ class State(rx.State):
     # === CACHE Y PERFORMANCE ===
     cursos_cache_loaded: bool = False                    # Flag de cache de cursos cargado
     instituciones_cache_loaded: bool = False             # Flag de cache de instituciones cargado
+    ciudades_cache_loaded: bool = False                  # Flag de cache de ciudades cargado
     
     # === FILTROS DE BÚSQUEDA ===
     # Estos filtros se aplican en tiempo real en la página /cursos
@@ -128,14 +130,20 @@ class State(rx.State):
     duracion_seleccionada: str = ""                      # Filtro por duración (no implementado completamente)
     requisito_seleccionado: str = ""                     # Filtro por requisitos de ingreso
     institucion_seleccionada: str = ""                   # Filtro por institución
+    lugar_seleccionado: str = ""                         # Filtro por lugar
+    busqueda_texto: str = ""  # Filtro de búsqueda manual
     
     # === DATOS DE INSTITUCIONES ===
     instituciones_nombres: List[str] = []                # Lista de nombres para filtro dropdown
     instituciones_info: List[Dict[str, Any]] = []        # Datos completos para galería
     
+    # === DATOS DE CIUDADES ===
+    ciudades_nombres: List[str] = []                     # Lista de nombres de ciudades para filtro dropdown
+    
     # === UI CONTROL - MODAL DE INSTITUCIONES ===
     is_dialog_open: bool = False                         # Control modal detalle institución
     selected_institution: Dict[str, Any] = {}           # Institución seleccionada en modal
+    ciudad_filtro_instituciones: str = ""                # Filtro de ciudad para instituciones
     
     # === RESPONSIVE DESIGN ===
     is_mobile: bool = False                              # Detector de dispositivos móviles
@@ -181,6 +189,7 @@ class State(rx.State):
     form_duracion_numero: str = ""                       # Campo duración numérica
     form_duracion_unidad: str = ""                       # Campo unidad de tiempo
     form_requisitos_ingreso: str = ""                    # Campo requisitos previos
+    form_lugar: str = ""                                 # Campo lugar donde se dicta el curso
     form_informacion: str = ""                           # Campo información adicional
     
     # === OPCIONES PARA DROPDOWNS ===
@@ -189,6 +198,7 @@ class State(rx.State):
     opciones_requisitos: List[str] = CursosConstants.REQUISITOS_INGRESO    # ["Ciclo básico", "Bachillerato", ...]
     opciones_duracion_numero: List[str] = CursosConstants.DURACIONES_NUMEROS  # ["1", "2", ..., "12"]
     opciones_duracion_unidad: List[str] = CursosConstants.DURACIONES_UNIDADES # ["meses", "años"]
+    opciones_lugar: List[str] = CursosConstants.LUGARES                    # ["Virtual", "Salto", "Montevideo", ...]
 
     def cargar_cursos(self):
         """Carga todos los cursos desde la base de datos con cache inteligente."""
@@ -217,6 +227,16 @@ class State(rx.State):
             if self.institucion_seleccionada and curso['institucion'] != self.institucion_seleccionada:
                 continue
             
+            # Aplicar filtro de lugar
+            if self.lugar_seleccionado and self.lugar_seleccionado not in curso['lugar']:
+                continue
+            
+            # Filtro de texto manual
+            if self.busqueda_texto:
+                texto = self.busqueda_texto.lower()
+                if texto not in (curso['nombre'] or '').lower() and texto not in (curso['informacion'] or '').lower():
+                    continue
+            
             cursos_filtrados.append(curso)
         
         self.cursos = cursos_filtrados
@@ -229,7 +249,8 @@ class State(rx.State):
                 f"{curso['duracion_numero']} {curso['duracion_unidad']}" if curso.get('duracion_numero') and curso.get('duracion_unidad') else "N/A",
                 curso['requisitos_ingreso'],
                 curso['institucion'],
-                curso['informacion']
+                curso['informacion'],
+                curso['lugar']
             ]
             for curso in cursos_filtrados
         ]
@@ -247,6 +268,20 @@ class State(rx.State):
         """Carga datos completos de instituciones (solo cuando se necesiten)."""
         self.instituciones_info = obtener_instituciones()
 
+    def cargar_instituciones_con_sedes(self, ciudad: str = None):
+        """Carga instituciones con sus sedes, opcionalmente filtradas por ciudad."""
+        from .database import obtener_instituciones_con_sedes_por_ciudad
+        self.instituciones_info = obtener_instituciones_con_sedes_por_ciudad(ciudad)
+
+    def cargar_ciudades_nombres(self):
+        """Carga nombres de ciudades con cache inteligente."""
+        if not self.ciudades_cache_loaded:
+            print("[PERFORMANCE] Cargando ciudades desde DB (primera vez)")
+            self.ciudades_nombres = ["Todas"] + obtener_ciudades_nombres()
+            self.ciudades_cache_loaded = True
+        else:
+            print("[PERFORMANCE] Usando cache de ciudades (navegación rápida)")
+
     def cargar_datos_cursos_page(self):
         """Carga los datos iniciales de la página de cursos con optimización de cold start."""
         print("[PERFORMANCE] cargar_datos_cursos_page ejecutándose")
@@ -259,11 +294,14 @@ class State(rx.State):
             # 1. Cargar instituciones primero (query rápida)
             self.cargar_instituciones_nombres()
             
-            # 2. Inicializar con estado vacío para mostrar skeleton
+            # 2. Cargar ciudades (query rápida)
+            self.cargar_ciudades_nombres()
+            
+            # 3. Inicializar con estado vacío para mostrar skeleton
             self.cursos = []
             self.cursos_originales = []
             
-            # 3. Cargar cursos en background (query pesada optimizada)
+            # 4. Cargar cursos en background (query pesada optimizada)
             self.cargar_cursos()
             
             print(f"[PERFORMANCE] COLD START completado - Progressive loading aplicado")
@@ -272,8 +310,21 @@ class State(rx.State):
             # Navegaciones subsecuentes: usar cache (instantáneo)
             self.cargar_cursos()
             self.cargar_instituciones_nombres()
+            self.cargar_ciudades_nombres()
         
         print(f"[PERFORMANCE] Datos cargados - Cursos: {len(self.cursos_originales)}, Filtrados: {len(self.cursos)}")
+
+    def cargar_datos_instituciones_page(self):
+        """Carga los datos iniciales de la página de instituciones."""
+        print("[PERFORMANCE] cargar_datos_instituciones_page ejecutándose")
+        
+        # Cargar ciudades para el filtro
+        self.cargar_ciudades_nombres()
+        
+        # Cargar instituciones con sedes (sin filtro inicial)
+        self.cargar_instituciones_con_sedes()
+        
+        print(f"[PERFORMANCE] Datos de instituciones cargados - Instituciones: {len(self.instituciones_info)}")
 
     def actualizar_nivel_seleccionado(self, nivel: str):
         self.nivel_seleccionado = "" if nivel == "Todos" else nivel
@@ -291,12 +342,22 @@ class State(rx.State):
         self.institucion_seleccionada = "" if institucion == "Todos" else institucion
         self.aplicar_filtros()
 
+    def actualizar_lugar_seleccionado(self, lugar: str):
+        self.lugar_seleccionado = "" if lugar == "Todas" else lugar
+        self.aplicar_filtros()
+
+    def actualizar_busqueda_texto(self, texto: str):
+        self.busqueda_texto = texto
+        self.aplicar_filtros()
+
     def limpiar_filtros(self):
         """Limpia todos los filtros seleccionados sin recargar datos (usa cache)."""
         print("[PERFORMANCE] Limpiando filtros (sin recargar DB)")
         self.nivel_seleccionado = ""
         self.requisito_seleccionado = ""
         self.institucion_seleccionada = ""
+        self.lugar_seleccionado = ""
+        self.busqueda_texto = "" # Limpiar texto de búsqueda
         self.aplicar_filtros()
         
     def forzar_recarga_cache(self):
@@ -317,6 +378,14 @@ class State(rx.State):
     def go_to_institution_courses(self):
         self.institucion_seleccionada = self.selected_institution.get("nombre", "")
         return rx.redirect("/cursos")
+
+    def actualizar_filtro_ciudad_instituciones(self, ciudad: str):
+        """Actualiza el filtro de ciudad para instituciones y recarga los datos."""
+        self.ciudad_filtro_instituciones = "" if ciudad == "Todas" else ciudad
+        if self.ciudad_filtro_instituciones:
+            self.cargar_instituciones_con_sedes(self.ciudad_filtro_instituciones)
+        else:
+            self.cargar_instituciones_con_sedes()  # Sin filtro
 
     def toggle_login_dialog(self):
         self.show_login_dialog = not self.show_login_dialog
@@ -411,6 +480,7 @@ class State(rx.State):
         self.form_duracion_numero = ""
         self.form_duracion_unidad = ""
         self.form_requisitos_ingreso = ""
+        self.form_lugar = ""
         self.form_informacion = ""
         return rx.redirect("/")
 
@@ -463,6 +533,9 @@ class State(rx.State):
     def set_form_requisitos_ingreso(self, value: str):
         self.form_requisitos_ingreso = value
         
+    def set_form_lugar(self, value: str):
+        self.form_lugar = value
+        
     def set_form_informacion(self, value: str):
         self.form_informacion = value
 
@@ -491,6 +564,7 @@ class State(rx.State):
         self.form_duracion_numero = ""
         self.form_duracion_unidad = ""
         self.form_requisitos_ingreso = ""
+        self.form_lugar = ""
         self.form_informacion = ""
         self.curso_a_editar = {}
         self.is_editing = False
@@ -508,6 +582,7 @@ class State(rx.State):
         self.form_duracion_numero = str(curso.get("duracion_numero", ""))
         self.form_duracion_unidad = curso.get("duracion_unidad", "")
         self.form_requisitos_ingreso = curso.get("requisitos_ingreso", "")
+        self.form_lugar = curso.get("lugar", "")
         self.form_informacion = curso.get("informacion", "")
         self.show_curso_dialog = True
 
@@ -529,6 +604,7 @@ class State(rx.State):
             "duracion_numero": self.form_duracion_numero,
             "duracion_unidad": self.form_duracion_unidad,
             "requisitos_ingreso": self.form_requisitos_ingreso,
+            "lugar": self.form_lugar,
             "informacion": self.form_informacion,
             "institucion_id": self.logged_in_user.institucion_id,
         }

@@ -25,6 +25,7 @@ class Color:
     GRAY_100 = "#1F2937"  # Fondo principal del body - gris oscuro
     GRAY_300 = "#374151"  # Gris medio oscuro
     GRAY_500 = "#6B7280"  # Gris medio
+    GRAY_600 = "#737373"  # Gris medio intermedio
     GRAY_700 = "#9CA3AF"  # Gris claro para texto
     GRAY_900 = "#F9FAFB"  # Texto principal - casi blanco
     WHITE = "#FFFFFF"

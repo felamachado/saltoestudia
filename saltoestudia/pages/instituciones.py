@@ -4,6 +4,9 @@ import reflex as rx
 from ..layout import page_layout, navbar_icons, footer, login_dialog
 from ..state import State
 from .. import theme
+from ..theme import ComponentStyle
+
+
 
 def render_institucion_card(institucion: dict) -> rx.Component:
     """Renderiza la tarjeta de una institución."""
@@ -15,30 +18,18 @@ def render_institucion_card(institucion: dict) -> rx.Component:
         nombre = institucion["nombre"]
     except Exception:
         nombre = ""
-    try:
-        direccion = institucion["direccion"]
-    except Exception:
-        direccion = ""
-    try:
-        telefono = institucion["telefono"]
-    except Exception:
-        telefono = ""
-    try:
-        email = institucion["email"]
-    except Exception:
-        email = ""
-    try:
-        web = institucion["web"]
-    except Exception:
-        web = ""
+
+    # Obtener información de la sede correspondiente a la ciudad filtrada
+    sede_ciudad = institucion.get("sede_ciudad")
+
     return rx.box(
         rx.vstack(
             # Contenedor para logo con altura uniforme
             rx.box(
                 rx.image(
-                    src=logo, 
-                    width="100%", 
-                    height="120px",  # Altura fija uniforme para todos los logos
+                    src=logo,
+                    width="100%",
+                    height="120px",
                     object_fit="contain",
                     padding="1em",
                     border_radius="8px",
@@ -47,20 +38,19 @@ def render_institucion_card(institucion: dict) -> rx.Component:
                 justify_content="center",
                 align_items="center",
                 width="100%",
-                height="140px",  # Altura fija del contenedor para alineación visual
-                bg=theme.Color.WHITE,  # Fondo blanco para los logos
+                height="140px",
+                bg=theme.Color.WHITE,
                 border_radius="8px",
                 margin_bottom="1em",
             ),
-            
             # Contenido de texto con padding amplio
             rx.vstack(
                 rx.heading(
-                    nombre, 
-                    size="5",  # Tamaño ligeramente mayor
+                    nombre,
+                    size="5",
                     font_weight=theme.Typography.FONT_WEIGHTS["bold"],
                     font_family=theme.Typography.FONT_FAMILY,
-                    width="100%", 
+                    width="100%",
                     text_align="center",
                     white_space="normal",
                     color=theme.Color.GRAY_900,
@@ -70,86 +60,39 @@ def render_institucion_card(institucion: dict) -> rx.Component:
                     border_color=theme.Color.GRAY_500,
                     margin_y="0.75em"
                 ),
+                # Información de contacto simplificada
                 rx.vstack(
-                    rx.cond(
-                        direccion,
-                        rx.hstack(
-                            rx.icon(tag="map_pin", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                direccion,
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                white_space="normal",
-                                color=theme.Color.GRAY_700,
-                                line_height="1.4",
-                            ), 
-                            spacing="3",
-                            align_items="start",
-                            width="100%",
-                        )
+                    rx.text(
+                        "Información de contacto",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.BLUE_300,
+                        font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                        text_align="center",
                     ),
-                    rx.cond(
-                        telefono,
-                        rx.hstack(
-                            rx.icon(tag="phone", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                telefono,
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                white_space="normal",
-                                color=theme.Color.GRAY_700,
-                                line_height="1.4",
-                            ), 
-                            spacing="3",
-                            align_items="center",
-                            width="100%",
-                        )
+                    rx.text(
+                        "Contactar directamente con la institución",
+                        font_size="0.8rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                        text_align="center",
+                        line_height="1.3",
                     ),
-                    rx.cond(
-                        email,
-                        rx.hstack(
-                            rx.icon(tag="mail", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                email,
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                white_space="normal",
-                                color=theme.Color.GRAY_700,
-                                line_height="1.4",
-                            ), 
-                            spacing="3",
-                            align_items="center",
-                            width="100%",
-                        )
-                    ),
-                    rx.cond(
-                        web,
-                        rx.hstack(
-                            rx.icon(tag="globe", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                "Sitio Web", 
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                color=theme.Color.BLUE_300,
-                                font_weight=theme.Typography.FONT_WEIGHTS["medium"],
-                            ), 
-                            spacing="3",
-                            align_items="center",
-                            width="100%",
-                        )
-                    ),
-                    spacing="3", 
-                    align_items="start", 
+                    spacing="2",
+                    align_items="start",
                     width="100%",
+                    padding="0.5em",
+                    bg=theme.Color.GRAY_100,
+                    border_radius="6px",
+                    margin_bottom="0.5em",
                 ),
-                width="100%", 
+                width="100%",
                 spacing="2",
             ),
             spacing="0",
             width="100%",
-            align_items="start",  # Alineación superior dentro de cada tarjeta
+            align_items="start",
         ),
-        # Padding interno amplio para que el contenido respire
         padding="2em",
         cursor="pointer",
         on_click=lambda: State.open_institution_dialog(institucion),
@@ -157,10 +100,8 @@ def render_institucion_card(institucion: dict) -> rx.Component:
         border=f"1px solid {theme.Color.GRAY_500}",
         border_radius="12px",
         box_shadow="lg",
-        # Dimensiones para grilla automática optimizada
         width="100%",
         height="auto",
-        # Transiciones suaves preservadas
         transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         _hover={
             "box_shadow": "2xl",
@@ -209,75 +150,34 @@ def institution_dialog() -> rx.Component:
                         spacing="4",
                         width="100%",
                     ),
-                    
+
                     rx.divider(border_color=theme.Color.GRAY_500),  # border
-                    
-                    # Información detallada
+
+                    # Información detallada de sedes
                     rx.vstack(
-                        rx.cond(
-                            State.selected_institution["direccion"],
-                            rx.hstack(
-                                rx.icon(tag="info", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    State.selected_institution["direccion"],
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    color=theme.Color.GRAY_900,  # on_surface
-                                ),
-                                align_items="start",
-                                spacing="3",
-                                width="100%",
-                            )
+                        rx.heading(
+                            "Sedes disponibles",
+                            size="5",
+                            font_family=theme.Typography.FONT_FAMILY,
+                            font_weight=theme.Typography.FONT_WEIGHTS["bold"],
+                            color=theme.Color.GRAY_900,
+                            margin_bottom="1em",
                         ),
-                        rx.cond(
-                            State.selected_institution["telefono"],
-                            rx.hstack(
-                                rx.icon(tag="phone", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    State.selected_institution["telefono"],
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    color=theme.Color.GRAY_900,  # on_surface
-                                ),
-                                align_items="center",
-                                spacing="3",
-                                width="100%",
-                            )
+                        rx.text(
+                            "Información detallada de todas las sedes",
+                            font_size="0.9rem",
+                            font_family=theme.Typography.FONT_FAMILY,
+                            color=theme.Color.GRAY_700,
+                            text_align="center",
+                            line_height="1.5",
                         ),
-                        rx.cond(
-                            State.selected_institution["email"],
-                            rx.hstack(
-                                rx.icon(tag="mail", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    State.selected_institution["email"],
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    color=theme.Color.GRAY_900,  # on_surface
-                                ),
-                                align_items="center",
-                                spacing="3",
-                                width="100%",
-                            )
-                        ),
-                        rx.cond(
-                            State.selected_institution["web"],
-                            rx.hstack(
-                                rx.icon(tag="link", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    "Sitio web disponible",
-                                    color=theme.Color.BLUE_300,  # accent para enlaces
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    font_style="italic",
-                                ),
-                                align_items="center",
-                                spacing="3",
-                                width="100%",
-                            )
-                        ),
-                        spacing="4",
+                        spacing="3",
                         align_items="start",
                         width="100%",
                     ),
-                    
+
                     rx.divider(border_color=theme.Color.GRAY_500),  # border
-                    
+
                     # Botones de acción
                     rx.hstack(
                         rx.button(
@@ -304,7 +204,7 @@ def institution_dialog() -> rx.Component:
                         justify="end",
                         width="100%",
                     ),
-                    
+
                     spacing="6",
                     width="100%",
                 ),
@@ -332,7 +232,7 @@ def institution_dialog() -> rx.Component:
 @rx.page(
     route="/instituciones",
     title="Instituciones | Salto Estudia",
-    on_load=State.cargar_instituciones
+    on_load=State.cargar_datos_instituciones_page
 )
 def instituciones() -> rx.Component:
     # Layout especializado para instituciones sin limitaciones de ancho
@@ -363,6 +263,31 @@ def instituciones() -> rx.Component:
                             color=theme.Color.GRAY_900,
                             font_family=theme.Typography.FONT_FAMILY,
                             text_align="center",
+                            margin_bottom="1em",
+                        ),
+                        
+                        # Filtro por ciudad
+                        rx.vstack(
+                            rx.text(
+                                "Filtrar por ciudad:",
+                                font_size="1rem",
+                                font_family=theme.Typography.FONT_FAMILY,
+                                color=theme.Color.GRAY_900,
+                                font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                            ),
+                            rx.select(
+                                State.ciudades_nombres,
+                                placeholder="Selecciona una ciudad",
+                                value=rx.cond(
+                                    State.ciudad_filtro_instituciones == "",
+                                    "Todas",
+                                    State.ciudad_filtro_instituciones
+                                ),
+                                on_change=State.actualizar_filtro_ciudad_instituciones,
+                                **ComponentStyle.FORM_SELECT,
+                                width="300px",
+                            ),
+                            spacing="1",
                             margin_bottom="2em",
                         ),
                         

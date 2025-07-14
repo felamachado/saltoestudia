@@ -461,3 +461,48 @@ El script `./scripts/limpiar_puertos.sh` incluye:
 - **Instalación automática** de `lsof` si no está disponible
 - **Compatibilidad** con diferentes distribuciones Linux
 - **Manejo de errores** y mensajes informativos con colores
+
+## 🚀 Arranque rápido para desarrollo local
+
+Si quieres probar el proyecto en tu máquina, simplemente ejecuta:
+
+```bash
+./scripts/arrancar_dev.sh
+```
+
+Este script:
+- Mata procesos que usen los puertos 3000 y 8000
+- Se asegura de que la base de datos correcta esté configurada
+- Ejecuta migraciones si es necesario
+- **Puebla automáticamente la base de datos con datos de prueba si está vacía**
+- Arranca Reflex en modo desarrollo
+
+¡Listo! Accede a http://localhost:3000 para ver la app funcionando con datos reales.
+
+## 🚀 Desarrollo
+
+### Ejecutar la aplicación
+
+**Opción 1: Script automático (recomendado)**
+```bash
+# Libera automáticamente puertos 3000 y 8000 antes de ejecutar
+./scripts/reflex-clean.sh
+```
+
+**Opción 2: Con npm**
+```bash
+npm run dev-clean
+```
+
+**Opción 3: Manual (puede dar errores de puertos ocupados)**
+```bash
+reflex run
+```
+
+### ¿Por qué usar el script automático?
+
+El script `reflex-clean.sh` resuelve automáticamente el problema común de puertos ocupados:
+- Libera el puerto 3000 (frontend) si está ocupado
+- Libera el puerto 8000 (backend) si está ocupado
+- Ejecuta `reflex run` sin errores
+- Funciona en Linux, macOS y Windows (WSL)
