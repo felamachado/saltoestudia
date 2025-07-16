@@ -6,8 +6,8 @@ from sqlalchemy import pool
 
 from alembic import context
 
-# Import Reflex models
-import reflex as rx
+# Import SQLModel and project models
+from sqlmodel import SQLModel
 from saltoestudia.models import *
 
 # this is the Alembic Config object, which provides
@@ -19,8 +19,8 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Set the target metadata from Reflex models
-target_metadata = rx.Model.metadata
+# Set the target metadata from SQLModel (includes all project models)
+target_metadata = SQLModel.metadata
 
 # Configure database URL from environment variables
 def get_database_url():

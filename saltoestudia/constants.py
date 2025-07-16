@@ -30,6 +30,7 @@ class CursosConstants:
     - DURACIONES_NUMEROS: Rangos numéricos para duración de cursos
     - DURACIONES_UNIDADES: Unidades de tiempo válidas
     - REQUISITOS_INGRESO: Requisitos educativos previos
+    - LUGARES: Lugares donde se pueden dictar cursos (ciudades + virtual)
     
     PATRÓN DE USO:
     Estas constantes se utilizan para:
@@ -67,6 +68,29 @@ class CursosConstants:
         "Bachillerato",   # Secundaria completa (hasta 6to)
         "Terciario",      # Título terciario previo
         "Universitario"   # Título universitario previo
+    ]
+
+    # Lista de lugares donde se pueden dictar cursos (ciudades + virtual)
+    LUGARES = [
+        "Virtual",              # Modalidad online/remota
+        "Artigas",              # Capital del departamento de Artigas
+        "Salto",                # Capital del departamento de Salto
+        "Paysandú",             # Capital del departamento de Paysandú
+        "Mercedes",             # Capital del departamento de Soriano
+        "Fray Bentos",          # Capital del departamento de Río Negro
+        "Colonia del Sacramento", # Capital del departamento de Colonia
+        "San José de Mayo",     # Capital del departamento de San José
+        "Montevideo",           # Capital del departamento de Montevideo
+        "Canelones",            # Capital del departamento de Canelones
+        "Florida",              # Capital del departamento de Florida
+        "Minas",                # Capital del departamento de Lavalleja
+        "Rocha",                # Capital del departamento de Rocha
+        "Treinta y Tres",       # Capital del departamento de Treinta y Tres
+        "Melo",                 # Capital del departamento de Cerro Largo
+        "Rivera",               # Capital del departamento de Rivera
+        "Tacuarembó",           # Capital del departamento de Tacuarembó
+        "Durazno",              # Capital del departamento de Durazno
+        "Trinidad"              # Capital del departamento de Flores
     ]
 
 class ValidationConstants:
@@ -155,6 +179,19 @@ class ValidationConstants:
             bool: True si es válido, False en caso contrario
         """
         return requisito in CursosConstants.REQUISITOS_INGRESO
+    
+    @classmethod
+    def validate_lugar(cls, lugar: str) -> bool:
+        """
+        Valida que el lugar sea uno de los permitidos.
+        
+        Args:
+            lugar: Lugar donde se dicta el curso (ciudad o virtual)
+            
+        Returns:
+            bool: True si es válido, False en caso contrario
+        """
+        return lugar in CursosConstants.LUGARES
 
 # ================================================================================
 # NOTAS DE IMPLEMENTACIÓN

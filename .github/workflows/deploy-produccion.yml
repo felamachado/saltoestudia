@@ -1,0 +1,98 @@
+name: 🚀 Deploy Producción to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Agregar VPS a known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan ${{ secrets.VPS_HOST_IP }} >> ~/.ssh/known_hosts
+
+      - name: Debug - Mostrar llaves cargadas en el agente
+        run: ssh-add -l
+
+      - name: Debug - Mostrar known_hosts
+        run: cat ~/.ssh/known_hosts
+
+      - name: Copiar archivos al VPS (rsync)
+        run: |
+          rsync -avz --delete --exclude='.git*' --exclude='data/' --exclude='logs/' --exclude='.env' ./ ${{ secrets.VPS_HOST }}:/srv/docker/saltoestudia/
+
+      - name: Verificar estructura del VPS
+        run: |
+          ssh ${{ secrets.VPS_HOST }} '
+            echo "📁 Verificando estructura del VPS..."
+            ls -la /srv/docker/
+            echo "🐳 Verificando red Traefik..."
+            docker network ls | grep traefik || echo "⚠️ Red Traefik no encontrada"
+            echo "📊 Verificando contenedores activos..."
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+          '
+
+      - name: Ejecutar deploy en el VPS
+        run: |
+          ssh ${{ secrets.VPS_HOST }} '
+            echo "🚀 Iniciando deploy de producción..."
+            cd /srv/docker/saltoestudia
+            
+            echo "📋 Verificando archivos..."
+            ls -la docker-compose.yml .env || echo "⚠️ Archivos de configuración no encontrados"
+            
+            echo "🛑 Deteniendo contenedores anteriores..."
+            docker compose down --remove-orphans || true
+            docker rm -f saltoestudia-app || true
+            
+            echo "🔧 Construyendo nueva imagen..."
+            docker compose build --no-cache
+            
+            echo "🚀 Iniciando contenedores..."
+            docker compose up -d
+            
+            echo "⏳ Esperando que los contenedores estén listos..."
+            sleep 10
+            
+            echo "📊 Verificando estado de contenedores..."
+            docker compose ps
+            docker logs saltoestudia-app --tail 20 || echo "⚠️ No se pudieron obtener logs"
+          '
+
+      - name: Verificar deploy exitoso
+        run: |
+          ssh ${{ secrets.VPS_HOST }} '
+            echo "🔍 Verificando que el deploy fue exitoso..."
+            
+            # Verificar que el contenedor está corriendo
+            if docker ps | grep -q "saltoestudia-app"; then
+              echo "✅ Contenedor saltoestudia-app está corriendo"
+            else
+              echo "❌ Contenedor saltoestudia-app NO está corriendo"
+              exit 1
+            fi
+            
+            # Verificar que Traefik puede acceder al contenedor
+            echo "🌐 Verificando conectividad con Traefik..."
+            docker network inspect traefik-net | grep -A 5 -B 5 "saltoestudia-app" || echo "⚠️ Contenedor no encontrado en red Traefik"
+            
+            # Verificar logs sin errores críticos
+            echo "📋 Últimos logs del contenedor:"
+            docker logs saltoestudia-app --tail 10
+            
+            echo "🎯 Deploy de producción verificado exitosamente"
+          '
+
+      - name: Notificar éxito
+        run: echo "🚀 Deploy de producción completado con éxito en VPS" 

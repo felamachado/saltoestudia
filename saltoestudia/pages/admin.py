@@ -28,6 +28,38 @@ def admin_layout_desktop(*content) -> rx.Component:
             bg=theme.Color.GRAY_300,
             align_items="center"
         ),
+        # Navegación entre secciones
+        rx.hstack(
+            rx.button(
+                "Gestión de Cursos",
+                on_click=lambda: rx.redirect("/admin"),
+                bg="#004A99",
+                color=theme.Color.WHITE,
+                font_family=theme.Typography.FONT_FAMILY,
+                _hover={"bg": "#003875"},
+                border_radius="6px",
+                padding="0.5em 1em",
+            ),
+            rx.button(
+                "Gestión de Sedes",
+                on_click=lambda: rx.redirect("/admin/sedes"),
+                variant="outline",
+                border_color=theme.Color.GRAY_500,
+                color=theme.Color.GRAY_900,
+                font_family=theme.Typography.FONT_FAMILY,
+                _hover={
+                    "bg": theme.Color.GRAY_300,
+                    "border_color": theme.Color.GRAY_700,
+                },
+                border_radius="6px",
+                padding="0.5em 1em",
+            ),
+            spacing="2",
+            width="100%",
+            padding="1em 2em",
+            bg=theme.Color.GRAY_300,
+            align_items="center"
+        ),
         rx.box(
             *content,
             padding="2em",
@@ -63,6 +95,40 @@ def admin_layout_mobile(*content) -> rx.Component:
             bg=theme.Color.GRAY_300,
             align_items="center",
             spacing="3",
+        ),
+        # Navegación entre secciones (móvil)
+        rx.vstack(
+            rx.button(
+                "Gestión de Cursos",
+                on_click=lambda: rx.redirect("/admin"),
+                bg="#004A99",
+                color=theme.Color.WHITE,
+                font_family=theme.Typography.FONT_FAMILY,
+                _hover={"bg": "#003875"},
+                border_radius="6px",
+                padding="0.5em 1em",
+                width="100%",
+            ),
+            rx.button(
+                "Gestión de Sedes",
+                on_click=lambda: rx.redirect("/admin/sedes"),
+                variant="outline",
+                border_color=theme.Color.GRAY_500,
+                color=theme.Color.GRAY_900,
+                font_family=theme.Typography.FONT_FAMILY,
+                _hover={
+                    "bg": theme.Color.GRAY_300,
+                    "border_color": theme.Color.GRAY_700,
+                },
+                border_radius="6px",
+                padding="0.5em 1em",
+                width="100%",
+            ),
+            spacing="2",
+            width="100%",
+            padding="1em 1em",
+            bg=theme.Color.GRAY_300,
+            align_items="center"
         ),
         rx.box(
             *content,
@@ -121,7 +187,7 @@ def curso_form_dialog() -> rx.Component:
                         rx.vstack(
                             rx.text("Nivel", **ComponentStyle.FORM_LABEL),
                             rx.select(
-                                State.opciones_nivel,
+                                CursosConstants.NIVELES,
                                 value=State.form_nivel,
                                 on_change=State.set_form_nivel,
                                 placeholder="Seleccionar nivel",
@@ -138,7 +204,7 @@ def curso_form_dialog() -> rx.Component:
                                     rx.vstack(
                                         rx.text("Duración", **ComponentStyle.FORM_LABEL),
                                         rx.select(
-                                            State.opciones_duracion_numero,
+                                            CursosConstants.DURACIONES_NUMEROS,
                                             value=State.form_duracion_numero,
                                             on_change=State.set_form_duracion_numero,
                                             placeholder="Seleccionar",
@@ -149,7 +215,7 @@ def curso_form_dialog() -> rx.Component:
                                     rx.vstack(
                                         rx.text("Unidad", **ComponentStyle.FORM_LABEL, opacity=0), # Placeholder for alignment
                                         rx.select(
-                                            State.opciones_duracion_unidad,
+                                            CursosConstants.DURACIONES_UNIDADES,
                                             value=State.form_duracion_unidad,
                                             on_change=State.set_form_duracion_unidad,
                                             placeholder="Seleccionar",
@@ -167,7 +233,7 @@ def curso_form_dialog() -> rx.Component:
                                     rx.vstack(
                                         rx.text("Duración", **ComponentStyle.FORM_LABEL),
                                         rx.select(
-                                            State.opciones_duracion_numero,
+                                            CursosConstants.DURACIONES_NUMEROS,
                                             value=State.form_duracion_numero,
                                             on_change=State.set_form_duracion_numero,
                                             placeholder="Seleccionar número",
@@ -178,7 +244,7 @@ def curso_form_dialog() -> rx.Component:
                                     rx.vstack(
                                         rx.text("Unidad", **ComponentStyle.FORM_LABEL),
                                         rx.select(
-                                            State.opciones_duracion_unidad,
+                                            CursosConstants.DURACIONES_UNIDADES,
                                             value=State.form_duracion_unidad,
                                             on_change=State.set_form_duracion_unidad,
                                             placeholder="Seleccionar unidad",
@@ -197,11 +263,41 @@ def curso_form_dialog() -> rx.Component:
                         rx.vstack(
                             rx.text("Requisitos de Ingreso", **ComponentStyle.FORM_LABEL),
                             rx.select(
-                                State.opciones_requisitos,
+                                CursosConstants.REQUISITOS_INGRESO,
                                 value=State.form_requisitos_ingreso,
                                 on_change=State.set_form_requisitos_ingreso,
                                 placeholder="Seleccionar requisitos",
                                 **ComponentStyle.FORM_SELECT,
+                            ),
+                            align_items="start", width="100%",
+                        ),
+                        
+                        # Campo Lugar (checkboxes de ciudades válidas, usando rx.foreach y toggle_ciudad)
+                        rx.vstack(
+                            rx.text("Ciudad/es donde se dicta el curso", **ComponentStyle.FORM_LABEL),
+                            rx.box(
+                                rx.foreach(
+                                    State.form_ciudades_opciones,
+                                    lambda ciudad: rx.hstack(
+                                        rx.checkbox(
+                                            ciudad,
+                                            is_checked=State.form_ciudades.contains(ciudad),
+                                            on_change=lambda checked, c=ciudad: State.toggle_ciudad(c, checked),
+                                            mr="2"
+                                        ),
+                                        rx.text(ciudad),
+                                        align_items="center",
+                                        spacing="2"
+                                    )
+                                ),
+                                direction="column",
+                                spacing="2",
+                                width="100%"
+                            ),
+                            rx.cond(
+                                State.form_ciudades.length() == 0,
+                                rx.text("Debes seleccionar al menos una ciudad.", color="red"),
+                                None
                             ),
                             align_items="start", width="100%",
                         ),
@@ -325,7 +421,11 @@ def delete_alert_dialog() -> rx.Component:
                     
                     # Contenido del mensaje
                     rx.text(
-                        "¿Estás seguro de que deseas eliminar este curso? Esta acción no se puede deshacer.",
+                        rx.cond(
+                            State.curso_a_eliminar_id != -1,
+                            "¿Estás seguro de que deseas eliminar este curso? Esta acción no se puede deshacer.",
+                            "¿Estás seguro de que deseas eliminar esta sede? Esta acción no se puede deshacer."
+                        ),
                         color=theme.Color.GRAY_900,
                         font_family=theme.Typography.FONT_FAMILY,
                         text_align="center",
@@ -341,7 +441,11 @@ def delete_alert_dialog() -> rx.Component:
                             rx.hstack(
                                 rx.button(
                                     "Cancelar",
-                                    on_click=State.cerrar_alerta_eliminar,
+                                    on_click=rx.cond(
+                                        State.curso_a_eliminar_id != -1,
+                                        State.cerrar_alerta_eliminar,
+                                        State.cerrar_alerta_eliminar_sede
+                                    ),
                                     **ButtonStyle.secondary(),
                                     font_family=theme.Typography.FONT_FAMILY,
                                     font_weight=theme.Typography.FONT_WEIGHTS["medium"],
@@ -371,7 +475,11 @@ def delete_alert_dialog() -> rx.Component:
                                 ),
                                 rx.button(
                                     "Cancelar",
-                                    on_click=State.cerrar_alerta_eliminar,
+                                    on_click=rx.cond(
+                                        State.curso_a_eliminar_id != -1,
+                                        State.cerrar_alerta_eliminar,
+                                        State.cerrar_alerta_eliminar_sede
+                                    ),
                                     **ButtonStyle.secondary(),
                                     font_family=theme.Typography.FONT_FAMILY,
                                     font_weight=theme.Typography.FONT_WEIGHTS["medium"],
@@ -498,6 +606,7 @@ def render_curso_row(curso: Dict[str, Any]) -> rx.Component:
             )
         ),
         create_course_table_cell(curso["requisitos_ingreso"]),
+        create_course_table_cell(curso["lugar"]),
         create_course_table_cell(
             rx.cond(
                 curso["informacion"],
@@ -547,6 +656,12 @@ def render_curso_card_mobile(curso: Dict[str, Any]) -> rx.Component:
                 rx.hstack(
                     rx.text("Requisitos:", font_weight="bold", color=theme.Color.GRAY_900),
                     rx.text(curso["requisitos_ingreso"], color=theme.Color.GRAY_700),
+                    spacing="2",
+                    align="center",
+                ),
+                rx.hstack(
+                    rx.text("Lugar:", font_weight="bold", color=theme.Color.GRAY_900),
+                    rx.text(curso["lugar"]),
                     spacing="2",
                     align="center",
                 ),
@@ -655,7 +770,7 @@ def admin_content_desktop() -> rx.Component:
                 rx.table.root(
                     rx.table.header(
                         create_course_table_header([
-                            "Nombre", "Nivel", "Duración", "Requisitos", "Información", "Acciones"
+                            "Nombre", "Nivel", "Duración", "Requisitos", "Lugar", "Información", "Acciones"
                         ])
                     ),
                     rx.table.body(

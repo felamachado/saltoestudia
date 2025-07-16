@@ -84,7 +84,6 @@
 .venv/
 .vscode-server/
 .vscode/
-.web
 .web/
 .yarn/
 Datos*.ods

@@ -4,41 +4,23 @@ import reflex as rx
 from ..layout import page_layout, navbar_icons, footer, login_dialog
 from ..state import State
 from .. import theme
+from ..theme import ComponentStyle
 
-def render_institucion_card(institucion: dict) -> rx.Component:
-    """Renderiza la tarjeta de una institución."""
-    try:
-        logo = institucion["logo"]
-    except Exception:
-        logo = "/logos/logoutu.png"
-    try:
-        nombre = institucion["nombre"]
-    except Exception:
-        nombre = ""
-    try:
-        direccion = institucion["direccion"]
-    except Exception:
-        direccion = ""
-    try:
-        telefono = institucion["telefono"]
-    except Exception:
-        telefono = ""
-    try:
-        email = institucion["email"]
-    except Exception:
-        email = ""
-    try:
-        web = institucion["web"]
-    except Exception:
-        web = ""
+
+
+def render_institucion_card(sede) -> rx.Component:
+    """Renderiza la tarjeta de una sede de institución."""
+    logo = sede.get("logo", "/logos/logoutu.png")
+    nombre = sede.get("nombre", "")
+    ciudad = sede.get("ciudad", "")
+
     return rx.box(
         rx.vstack(
-            # Contenedor para logo con altura uniforme
             rx.box(
                 rx.image(
-                    src=logo, 
-                    width="100%", 
-                    height="120px",  # Altura fija uniforme para todos los logos
+                    src=logo,
+                    width="100%",
+                    height="120px",
                     object_fit="contain",
                     padding="1em",
                     border_radius="8px",
@@ -47,120 +29,40 @@ def render_institucion_card(institucion: dict) -> rx.Component:
                 justify_content="center",
                 align_items="center",
                 width="100%",
-                height="140px",  # Altura fija del contenedor para alineación visual
-                bg=theme.Color.WHITE,  # Fondo blanco para los logos
+                height="140px",
+                bg=theme.Color.WHITE,
                 border_radius="8px",
                 margin_bottom="1em",
             ),
-            
-            # Contenido de texto con padding amplio
             rx.vstack(
                 rx.heading(
-                    nombre, 
-                    size="5",  # Tamaño ligeramente mayor
+                    nombre,
+                    size="5",
                     font_weight=theme.Typography.FONT_WEIGHTS["bold"],
                     font_family=theme.Typography.FONT_FAMILY,
-                    width="100%", 
+                    width="100%",
                     text_align="center",
                     white_space="normal",
                     color=theme.Color.GRAY_900,
-                    margin_bottom="1em",
+                    margin_bottom="0.5em",
                 ),
-                rx.divider(
-                    border_color=theme.Color.GRAY_500,
-                    margin_y="0.75em"
-                ),
-                rx.vstack(
-                    rx.cond(
-                        direccion,
-                        rx.hstack(
-                            rx.icon(tag="map_pin", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                direccion,
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                white_space="normal",
-                                color=theme.Color.GRAY_700,
-                                line_height="1.4",
-                            ), 
-                            spacing="3",
-                            align_items="start",
-                            width="100%",
-                        )
-                    ),
-                    rx.cond(
-                        telefono,
-                        rx.hstack(
-                            rx.icon(tag="phone", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                telefono,
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                white_space="normal",
-                                color=theme.Color.GRAY_700,
-                                line_height="1.4",
-                            ), 
-                            spacing="3",
-                            align_items="center",
-                            width="100%",
-                        )
-                    ),
-                    rx.cond(
-                        email,
-                        rx.hstack(
-                            rx.icon(tag="mail", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                email,
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                white_space="normal",
-                                color=theme.Color.GRAY_700,
-                                line_height="1.4",
-                            ), 
-                            spacing="3",
-                            align_items="center",
-                            width="100%",
-                        )
-                    ),
-                    rx.cond(
-                        web,
-                        rx.hstack(
-                            rx.icon(tag="globe", size=18, color=theme.Color.BLUE_300), 
-                            rx.text(
-                                "Sitio Web", 
-                                font_size="0.9rem",
-                                font_family=theme.Typography.FONT_FAMILY,
-                                color=theme.Color.BLUE_300,
-                                font_weight=theme.Typography.FONT_WEIGHTS["medium"],
-                            ), 
-                            spacing="3",
-                            align_items="center",
-                            width="100%",
-                        )
-                    ),
-                    spacing="3", 
-                    align_items="start", 
-                    width="100%",
-                ),
-                width="100%", 
+
+                width="100%",
                 spacing="2",
             ),
             spacing="0",
             width="100%",
-            align_items="start",  # Alineación superior dentro de cada tarjeta
+            align_items="start",
         ),
-        # Padding interno amplio para que el contenido respire
         padding="2em",
         cursor="pointer",
-        on_click=lambda: State.open_institution_dialog(institucion),
+        on_click=lambda: State.open_institution_dialog(sede),
         bg=theme.Color.DARK_CARD,
         border=f"1px solid {theme.Color.GRAY_500}",
         border_radius="12px",
         box_shadow="lg",
-        # Dimensiones para grilla automática optimizada
         width="100%",
         height="auto",
-        # Transiciones suaves preservadas
         transition="all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
         _hover={
             "box_shadow": "2xl",
@@ -170,8 +72,193 @@ def render_institucion_card(institucion: dict) -> rx.Component:
         },
     )
 
+def render_sede_info(sede: dict) -> rx.Component:
+    """Renderiza la información de una sede individual."""
+    direccion = sede["direccion"]
+    ciudad = sede["ciudad"]
+    
+    return rx.vstack(
+        rx.vstack(
+            rx.cond(
+                ciudad == "Virtual",
+                # Información para sede virtual
+                rx.vstack(
+                    rx.text(
+                        "Modalidad: Virtual",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                        font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                    ),
+                    rx.text(
+                        "Tipo: Cursos online",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                    ),
+                    rx.text(
+                        "Acceso: Desde cualquier lugar",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                    ),
+                    spacing="2",
+                    align_items="start",
+                    width="100%",
+                ),
+                # Información para sede física
+                rx.vstack(
+                    rx.text(
+                        f"Ciudad: {ciudad}",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                        font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                    ),
+                    rx.text(
+                        f"Dirección: {direccion}",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                    ),
+                    rx.text(
+                        f"Teléfono: {sede['telefono']}",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                    ),
+                    rx.text(
+                        f"Email: {sede['email']}",
+                        font_size="0.9rem",
+                        font_family=theme.Typography.FONT_FAMILY,
+                        color=theme.Color.GRAY_700,
+                    ),
+                    rx.cond(
+                        sede.get("web"),
+                        rx.hstack(
+                            rx.text(
+                                "Sitio web:",
+                                font_size="0.9rem",
+                                font_family=theme.Typography.FONT_FAMILY,
+                                color=theme.Color.GRAY_700,
+                            ),
+                            rx.link(
+                                sede["web"],
+                                href=sede["web"],
+                                is_external=True,
+                                font_size="0.9rem",
+                                font_family=theme.Typography.FONT_FAMILY,
+                                color=theme.Color.BLUE_700,
+                                _hover={"text_decoration": "underline"},
+                            ),
+                            spacing="1",
+                            align_items="center",
+                        ),
+                        rx.text(
+                            "Sitio web: No disponible",
+                            font_size="0.9rem",
+                            font_family=theme.Typography.FONT_FAMILY,
+                            color=theme.Color.GRAY_700,
+                        )
+                    ),
+                    spacing="2",
+                    align_items="start",
+                    width="100%",
+                )
+            ),
+            spacing="2",
+            align_items="start",
+            width="100%",
+        ),
+        # Botón "Ver Cursos" específico para esta sede
+        rx.button(
+            rx.cond(
+                ciudad == "Virtual",
+                "Ver cursos virtuales",
+                f"Ver Cursos en {ciudad}"
+            ),
+            on_click=lambda: State.go_to_sede_courses(sede),
+            bg="#004A99",  # primary
+            color=theme.Color.WHITE,  # on_primary
+            font_family=theme.Typography.FONT_FAMILY,
+            font_size="0.9rem",
+            padding="0.5em 1em",
+            border_radius="6px",
+            _hover={"bg": "#003875"},  # primary más oscuro
+            margin_top="1em",
+            align_self="end",  # Alinear a la derecha
+        ),
+        spacing="3",
+        align_items="start",
+        width="100%",
+        padding="1em",
+        bg=theme.Color.GRAY_100,
+        border_radius="8px",
+        border=f"1px solid {theme.Color.GRAY_300}",
+    )
+
+def render_sede_acordeon_item(sede: dict) -> rx.Component:
+    """Renderiza un elemento del acordeón para una sede."""
+    
+    return rx.vstack(
+        # Header del acordeón (siempre visible)
+        rx.box(
+            rx.hstack(
+                rx.heading(
+                    sede["nombre"],
+                    size="4",
+                    font_family=theme.Typography.FONT_FAMILY,
+                    font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                    color=theme.Color.GRAY_900,
+                ),
+                rx.spacer(),
+                rx.cond(
+                    State.expanded_sede_id == sede["id"],
+                    rx.icon(
+                        tag="chevron_down",
+                        size=20,
+                        color=theme.Color.GRAY_700,
+                        transition="transform 0.2s ease",
+                        transform="rotate(90deg)",
+                    ),
+                    rx.icon(
+                        tag="chevron_right",
+                        size=20,
+                        color=theme.Color.GRAY_700,
+                        transition="transform 0.2s ease",
+                        transform="rotate(0deg)",
+                    ),
+                ),
+                width="100%",
+                align_items="center",
+                cursor="pointer",
+                padding="1em",
+                bg=theme.Color.DARK_CARD,
+                border_radius="8px",
+                border=f"1px solid {theme.Color.GRAY_500}",
+                _hover={
+                    "bg": theme.Color.GRAY_300,
+                    "border_color": theme.Color.BLUE_300,
+                },
+                on_click=lambda: State.toggle_sede_acordeon(sede["id"]),
+            ),
+            width="100%",
+        ),
+        # Contenido del acordeón (condicional)
+        rx.cond(
+            State.expanded_sede_id == sede["id"],
+            rx.box(
+                render_sede_info(sede),
+                width="100%",
+                margin_top="0.5em",
+            ),
+        ),
+        spacing="0",
+        width="100%",
+    )
+
 def institution_dialog() -> rx.Component:
-    """Diálogo que muestra información detallada de una institución."""
+    """Diálogo que muestra información detallada de las sedes de una institución."""
     return rx.cond(
         State.is_dialog_open,
         rx.box(
@@ -197,7 +284,19 @@ def institution_dialog() -> rx.Component:
                                 color=theme.Color.GRAY_900,  # on_surface
                             ),
                             rx.text(
-                                "Información de la institución",
+                                rx.cond(
+                                    State.selected_institution.get("ciudad") == "Virtual",
+                                    "Cursos virtuales disponibles",
+                                    rx.cond(
+                                        State.selected_institution_sedes.length() == 1,
+                                        "1 sede física",
+                                        rx.cond(
+                                            State.selected_institution_sedes.length() == 0,
+                                            "Sin sedes físicas",
+                                            f"{State.selected_institution_sedes.length()} sedes físicas"
+                                        )
+                                    )
+                                ),
                                 font_size="2",
                                 color=theme.Color.GRAY_700,  # texto secundario
                                 font_family=theme.Typography.FONT_FAMILY,
@@ -209,75 +308,28 @@ def institution_dialog() -> rx.Component:
                         spacing="4",
                         width="100%",
                     ),
-                    
+
                     rx.divider(border_color=theme.Color.GRAY_500),  # border
-                    
-                    # Información detallada
-                    rx.vstack(
-                        rx.cond(
-                            State.selected_institution["direccion"],
-                            rx.hstack(
-                                rx.icon(tag="info", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    State.selected_institution["direccion"],
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    color=theme.Color.GRAY_900,  # on_surface
-                                ),
-                                align_items="start",
-                                spacing="3",
-                                width="100%",
-                            )
-                        ),
-                        rx.cond(
-                            State.selected_institution["telefono"],
-                            rx.hstack(
-                                rx.icon(tag="phone", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    State.selected_institution["telefono"],
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    color=theme.Color.GRAY_900,  # on_surface
-                                ),
-                                align_items="center",
-                                spacing="3",
-                                width="100%",
-                            )
-                        ),
-                        rx.cond(
-                            State.selected_institution["email"],
-                            rx.hstack(
-                                rx.icon(tag="mail", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    State.selected_institution["email"],
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    color=theme.Color.GRAY_900,  # on_surface
-                                ),
-                                align_items="center",
-                                spacing="3",
-                                width="100%",
-                            )
-                        ),
-                        rx.cond(
-                            State.selected_institution["web"],
-                            rx.hstack(
-                                rx.icon(tag="link", size=18, color=theme.Color.BLUE_300),  # accent
-                                rx.text(
-                                    "Sitio web disponible",
-                                    color=theme.Color.BLUE_300,  # accent para enlaces
-                                    font_family=theme.Typography.FONT_FAMILY,
-                                    font_style="italic",
-                                ),
-                                align_items="center",
-                                spacing="3",
-                                width="100%",
-                            )
-                        ),
-                        spacing="4",
-                        align_items="start",
-                        width="100%",
+
+                    # Contenido de sedes
+                    rx.cond(
+                        State.selected_institution_sedes.length() == 1,
+                        # Si solo hay una sede, mostrarla directamente
+                        render_sede_info(State.selected_institution_sedes[0]),
+                        # Si hay múltiples sedes, usar acordeón
+                        rx.vstack(
+                            rx.foreach(
+                                State.selected_institution_sedes,
+                                lambda sede: render_sede_acordeon_item(sede)
+                            ),
+                            spacing="2",
+                            align_items="start",
+                            width="100%",
+                        )
                     ),
-                    
+
                     rx.divider(border_color=theme.Color.GRAY_500),  # border
-                    
+
                     # Botones de acción
                     rx.hstack(
                         rx.button(
@@ -304,7 +356,7 @@ def institution_dialog() -> rx.Component:
                         justify="end",
                         width="100%",
                     ),
-                    
+
                     spacing="6",
                     width="100%",
                 ),
@@ -312,7 +364,7 @@ def institution_dialog() -> rx.Component:
                 padding="24px",
                 border_radius="12px",
                 box_shadow="2xl",  # conservo la misma elevación
-                max_width="500px",
+                max_width="600px",  # Aumentado para acomodar el acordeón
                 width="90%",
                 border=f"1px solid {theme.Color.GRAY_500}",  # border sutil
             ),
@@ -332,7 +384,7 @@ def institution_dialog() -> rx.Component:
 @rx.page(
     route="/instituciones",
     title="Instituciones | Salto Estudia",
-    on_load=State.cargar_instituciones
+    on_load=State.cargar_datos_instituciones_page
 )
 def instituciones() -> rx.Component:
     # Layout especializado para instituciones sin limitaciones de ancho
@@ -349,7 +401,7 @@ def instituciones() -> rx.Component:
                     rx.vstack(
                         # Título principal
                         rx.heading(
-                            "Instituciones Educativas", 
+                            "Sedes de Instituciones Educativas", 
                             size="9", 
                             color=theme.Color.BLUE_300,
                             font_family=theme.Typography.FONT_FAMILY,
@@ -358,20 +410,39 @@ def instituciones() -> rx.Component:
                         ),
                         # Subtítulo
                         rx.text(
-                            "Aquí encontrarás las principales instituciones educativas de Salto.",
+                            "Aquí encontrarás todas las sedes físicas de las instituciones educativas.",
                             size="4",
                             color=theme.Color.GRAY_900,
                             font_family=theme.Typography.FONT_FAMILY,
                             text_align="center",
+                            margin_bottom="1em",
+                        ),
+                        
+                        # Filtro por ciudad
+                        rx.vstack(
+                            rx.text(
+                                "Filtrar por ciudad:",
+                                font_size="1rem",
+                                font_family=theme.Typography.FONT_FAMILY,
+                                color=theme.Color.GRAY_900,
+                                font_weight=theme.Typography.FONT_WEIGHTS["medium"],
+                            ),
+                            rx.select(
+                                State.ciudades_nombres,
+                                placeholder="Selecciona ciudad",
+                                value=State.ciudad_filtro_instituciones,
+                                on_change=State.actualizar_filtro_ciudad_instituciones,
+                                **ComponentStyle.FORM_SELECT,
+                                width="300px",
+                            ),
+                            spacing="1",
                             margin_bottom="2em",
                         ),
                         
                         rx.cond(
                             State.instituciones_info,
-                            # Grilla optimizada centrada sin desbordamiento
                             rx.box(
                                 rx.foreach(State.instituciones_info, render_institucion_card),
-                                # CSS Grid con distribución automática controlada
                                 display="grid",
                                 grid_template_columns="repeat(auto-fill, minmax(260px, 1fr))",
                                 grid_auto_rows="auto",
@@ -381,7 +452,7 @@ def instituciones() -> rx.Component:
                                 justify_items="stretch",
                             ),
                             rx.text(
-                                "No se pudieron cargar las instituciones en este momento.", 
+                                "No hay instituciones en la ciudad seleccionada.",
                                 color=theme.Color.GRAY_700,
                                 font_family=theme.Typography.FONT_FAMILY,
                             )
