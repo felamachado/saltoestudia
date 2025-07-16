@@ -20,4 +20,16 @@ config = rx.Config(
     tailwind=None,
     # Deshabilitar plugins problemáticos
     disable_plugins=['reflex.plugins.sitemap.SitemapPlugin'],
+    # Configuración de Vite para permitir el dominio de producción
+    vite_config={
+        "server": {
+            "allowedHosts": [
+                "localhost",
+                "127.0.0.1",
+                "0.0.0.0",
+                "saltoestudia.infra.com.uy",
+                "*.infra.com.uy"
+            ]
+        }
+    }
 )
