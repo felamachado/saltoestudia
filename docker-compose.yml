@@ -8,6 +8,11 @@ services:
     container_name: saltoestudia-app
     restart: unless-stopped
     env_file: .env
+    environment:
+      - REFLEX_ALLOWED_HOSTS=all
+      - REFLEX_HOST=0.0.0.0
+      - REFLEX_PORT=3000
+      - VITE_ALLOWED_HOSTS=all
     volumes:
       - ./data:/app/data:rw
       - ./logs:/app/logs:rw

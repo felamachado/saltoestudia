@@ -26,10 +26,7 @@ config = rx.Config(
             "allowedHosts": ["all"],
             "host": "0.0.0.0",
             "port": 3000,
-            "strictPort": True,
-            "hmr": {
-                "host": "saltoestudia.infra.com.uy"
-            }
+            "strictPort": True
         }
     }
 )
