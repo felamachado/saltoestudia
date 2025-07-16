@@ -28,6 +28,7 @@ from .pages.instituciones import instituciones  # Galería de instituciones educ
 from .pages.cursos import cursos            # Buscador de cursos con filtros
 from .pages.info import info                # Información adicional del proyecto
 from .pages.admin import admin_page         # Panel de administración (requiere login)
+from .pages.admin_sedes import admin_sedes_page  # Gestión de sedes (requiere login)
 from .pages.login import login_page         # Página de inicio de sesión
 
 # === IMPORTACIONES DE MODELOS ===
@@ -54,6 +55,7 @@ app = rx.App(
 # - /cursos → buscador de cursos con filtros
 # - /info → información del proyecto
 # - /admin → panel administrativo (protegido)
+# - /admin/sedes → gestión de sedes (protegido)
 # - /login → formulario de inicio de sesión
 #
 # FLUJO DE NAVEGACIÓN:

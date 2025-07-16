@@ -28,15 +28,10 @@ jobs:
       - name: Debug - Mostrar known_hosts
         run: cat ~/.ssh/known_hosts
 
-      - name: Cambiar nombre de contenedor para desarrollo
+      - name: Copiar configuración de desarrollo
         run: |
-          sed -i 's/container_name: saltoestudia-app/container_name: saltoestudia-dev-app/' docker-compose.yml
-
-      - name: Cambiar labels Traefik para desarrollo
-        run: |
-          sed -i 's/saltoestudia.infra.com.uy/desarrollo.saltoestudia.infra.com.uy/g' docker-compose.yml
-          sed -i 's/saltoestudia-frontend/saltoestudia-dev-frontend/g' docker-compose.yml
-          sed -i 's/saltoestudia-backend/saltoestudia-dev-backend/g' docker-compose.yml
+          cp docker-compose.desarrollo.yml docker-compose.yml
+          cp config-desarrollo.env .env
 
       - name: Copiar archivos al VPS (rsync)
         run: |

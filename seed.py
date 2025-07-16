@@ -218,7 +218,6 @@ def seed_database():
                 
                 # Determinar ciudad según la institución
                 if inst_data["nombre"] == "Universidad de Montevideo":
-                    # Buscar o crear ciudad Montevideo
                     ciudad_montevideo = session.exec(select(Ciudad).where(Ciudad.nombre == "Montevideo")).first()
                     if not ciudad_montevideo:
                         ciudad_montevideo = Ciudad(nombre="Montevideo")
@@ -230,8 +229,7 @@ def seed_database():
                 else:
                     ciudad_id = ciudad_salto.id
                     ciudad_nombre = "Salto"
-                
-                # Crear sede asociada
+                # Crear sede física principal
                 sede = Sede(
                     institucion_id=institucion.id,
                     ciudad_id=ciudad_id,
@@ -242,6 +240,128 @@ def seed_database():
                 )
                 session.add(sede)
                 print(f"      🏢 Sede creada para {institucion.nombre} en {ciudad_nombre}")
+                
+                # Agregar sedes adicionales para algunas instituciones
+                if inst_data["nombre"] == "UDELAR – CENUR LN":
+                    # Crear ciudades para UDELAR CENUR LN
+                    ciudades_udelar = ["Artigas", "Paysandú", "Río Negro"]
+                    for ciudad_nombre in ciudades_udelar:
+                        ciudad = session.exec(select(Ciudad).where(Ciudad.nombre == ciudad_nombre)).first()
+                        if not ciudad:
+                            ciudad = Ciudad(nombre=ciudad_nombre)
+                            session.add(ciudad)
+                            session.commit()
+                            session.refresh(ciudad)
+                        
+                        # Datos específicos para cada sede
+                        sedes_udelar = {
+                            "Artigas": {
+                                "direccion": "Av. Artigas 1234",
+                                "telefono": "47721234",
+                                "email": "artigas@unorte.edu.uy",
+                                "web": "https://www.litoralnorte.udelar.edu.uy/artigas"
+                            },
+                            "Paysandú": {
+                                "direccion": "Av. Artigas 567",
+                                "telefono": "47221234",
+                                "email": "paysandu@unorte.edu.uy",
+                                "web": "https://www.litoralnorte.udelar.edu.uy/paysandu"
+                            },
+                            "Río Negro": {
+                                "direccion": "Av. Artigas 890",
+                                "telefono": "45621234",
+                                "email": "rionegro@unorte.edu.uy",
+                                "web": "https://www.litoralnorte.udelar.edu.uy/rionegro"
+                            }
+                        }
+                        
+                        sede_data = sedes_udelar[ciudad_nombre]
+                        sede = Sede(
+                            institucion_id=institucion.id,
+                            ciudad_id=ciudad.id,
+                            direccion=sede_data["direccion"],
+                            telefono=sede_data["telefono"],
+                            email=sede_data["email"],
+                            web=sede_data["web"]
+                        )
+                        session.add(sede)
+                        print(f"      🏢 Sede adicional creada para {institucion.nombre} en {ciudad_nombre}")
+                
+                elif inst_data["nombre"] == "Universidad de Montevideo":
+                    # Crear ciudades para Universidad de Montevideo
+                    ciudades_um = ["Punta del Este", "Colonia"]
+                    for ciudad_nombre in ciudades_um:
+                        ciudad = session.exec(select(Ciudad).where(Ciudad.nombre == ciudad_nombre)).first()
+                        if not ciudad:
+                            ciudad = Ciudad(nombre=ciudad_nombre)
+                            session.add(ciudad)
+                            session.commit()
+                            session.refresh(ciudad)
+                        
+                        # Datos específicos para cada sede
+                        sedes_um = {
+                            "Punta del Este": {
+                                "direccion": "Av. Roosevelt 1234",
+                                "telefono": "42481234",
+                                "email": "puntadeleste@um.edu.uy",
+                                "web": "https://www.um.edu.uy/punta-del-este"
+                            },
+                            "Colonia": {
+                                "direccion": "Av. General Flores 567",
+                                "telefono": "45221234",
+                                "email": "colonia@um.edu.uy",
+                                "web": "https://www.um.edu.uy/colonia"
+                            }
+                        }
+                        
+                        sede_data = sedes_um[ciudad_nombre]
+                        sede = Sede(
+                            institucion_id=institucion.id,
+                            ciudad_id=ciudad.id,
+                            direccion=sede_data["direccion"],
+                            telefono=sede_data["telefono"],
+                            email=sede_data["email"],
+                            web=sede_data["web"]
+                        )
+                        session.add(sede)
+                        print(f"      🏢 Sede adicional creada para {institucion.nombre} en {ciudad_nombre}")
+                
+                elif inst_data["nombre"] == "IAE Salto":
+                    # Agregar sede en Rivera
+                    ciudad_rivera = session.exec(select(Ciudad).where(Ciudad.nombre == "Rivera")).first()
+                    if not ciudad_rivera:
+                        ciudad_rivera = Ciudad(nombre="Rivera")
+                        session.add(ciudad_rivera)
+                        session.commit()
+                        session.refresh(ciudad_rivera)
+                    
+                    sede_rivera = Sede(
+                        institucion_id=institucion.id,
+                        ciudad_id=ciudad_rivera.id,
+                        direccion="Sarandí 567",
+                        telefono="46212345",
+                        email="rivera@iae.edu.uy",
+                        web=None
+                    )
+                    session.add(sede_rivera)
+                    print(f"      🏢 Sede adicional creada para {institucion.nombre} en Rivera")
+                # Crear sede virtual para todas las instituciones
+                ciudad_virtual = session.exec(select(Ciudad).where(Ciudad.nombre == "Virtual")).first()
+                if not ciudad_virtual:
+                    ciudad_virtual = Ciudad(nombre="Virtual")
+                    session.add(ciudad_virtual)
+                    session.commit()
+                    session.refresh(ciudad_virtual)
+                sede_virtual = Sede(
+                    institucion_id=institucion.id,
+                    ciudad_id=ciudad_virtual.id,
+                    direccion="Modalidad online/remota",
+                    telefono="",
+                    email=inst_data["sede"]["email"],
+                    web=inst_data["sede"]["web"]
+                )
+                session.add(sede_virtual)
+                print(f"      🏢 Sede virtual creada para {institucion.nombre}")
             session.commit()
             
             print("👥 Insertando usuarios con contraseñas individuales...")
@@ -280,6 +400,12 @@ def seed_database():
                     "env_var": "AGRARIA_PASSWORD",
                     "institucion_id": 5,
                     "institucion_nombre": "Esc. Agraria"
+                },
+                {
+                    "email": "um@um.edu.uy",
+                    "env_var": "UM_PASSWORD",
+                    "institucion_id": 6,
+                    "institucion_nombre": "Universidad de Montevideo"
                 }
             ]
             
@@ -314,10 +440,15 @@ def seed_database():
             ]
             ciudad_objs = []
             for nombre in ciudades:
-                ciudad = Ciudad(nombre=nombre)
-                session.add(ciudad)
-                ciudad_objs.append(ciudad)
-                print(f"   ✅ {nombre}")
+                ciudad_existente = session.exec(select(Ciudad).where(Ciudad.nombre == nombre)).first()
+                if ciudad_existente:
+                    ciudad_objs.append(ciudad_existente)
+                    print(f"   ⚠️  {nombre} ya existe, no se crea de nuevo.")
+                else:
+                    ciudad = Ciudad(nombre=nombre)
+                    session.add(ciudad)
+                    ciudad_objs.append(ciudad)
+                    print(f"   ✅ {nombre}")
             
             session.commit()
             
@@ -326,7 +457,14 @@ def seed_database():
             
             print("📚 Insertando cursos...")
             
-            # Definir cursos con sus ciudades (usando índices de ciudad_objs)
+            # === NUEVO: Mapear ciudades válidas por institución ===
+            instituciones_sedes = {}
+            for inst in session.exec(select(Institucion)).all():
+                sedes = session.exec(select(Sede).where(Sede.institucion_id == inst.id)).all()
+                ciudades_validas = [session.exec(select(Ciudad).where(Ciudad.id == sede.ciudad_id)).first().nombre for sede in sedes]
+                instituciones_sedes[inst.id] = set(ciudades_validas)
+            
+            # Definir cursos con sus ciudades (usando nombres, no índices)
             cursos_data = [
                 # UDELAR – CENUR LN (id=1)
                 {
@@ -337,7 +475,7 @@ def seed_database():
                     "requisitos_ingreso": "Bachillerato",
                     "informacion": "Programa con fuerte énfasis en desarrollo de software.",
                     "institucion_id": 1,
-                    "ciudades": [ciudad_objs[15]]  # Salto
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 {
                     "nombre": "Taller de Introducción a la Robótica",
@@ -347,7 +485,7 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Laboratorio con kits Arduino incluidos.",
                     "institucion_id": 1,
-                    "ciudades": [ciudad_objs[15], ciudad_objs[0]]  # Salto y Virtual
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 
                 # IAE Salto (id=2)
@@ -359,7 +497,7 @@ def seed_database():
                     "requisitos_ingreso": "Bachillerato",
                     "informacion": "Plan de negocios y mentoría con incubadoras locales.",
                     "institucion_id": 2,
-                    "ciudades": [ciudad_objs[15]]  # Salto
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 {
                     "nombre": "Marketing Digital y E-Commerce",
@@ -369,7 +507,7 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Campañas reales en redes sociales.",
                     "institucion_id": 2,
-                    "ciudades": [ciudad_objs[15], ciudad_objs[0]]  # Salto y Virtual
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 
                 # Esc. Catalina H. de Castaños (id=3)
@@ -381,7 +519,7 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Prácticas en instalaciones reales.",
                     "institucion_id": 3,
-                    "ciudades": [ciudad_objs[15]]  # Salto
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 {
                     "nombre": "Carpintería Básica",
@@ -391,7 +529,7 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Proyectos prácticos.",
                     "institucion_id": 3,
-                    "ciudades": [ciudad_objs[15]]  # Salto
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 
                 # Esc. De Administración (id=4)
@@ -403,7 +541,7 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Formación integral en gestión empresarial.",
                     "institucion_id": 4,
-                    "ciudades": [ciudad_objs[15]]  # Salto
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 {
                     "nombre": "Contabilidad Básica",
@@ -413,7 +551,7 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Uso de software contable.",
                     "institucion_id": 4,
-                    "ciudades": [ciudad_objs[15], ciudad_objs[0]]  # Salto y Virtual
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 
                 # Esc. Agraria (id=5)
@@ -425,7 +563,7 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Prácticas en campo y laboratorio propio.",
                     "institucion_id": 5,
-                    "ciudades": [ciudad_objs[15]]  # Salto
+                    "ciudades": ["Salto", "Virtual"]
                 },
                 {
                     "nombre": "Horticultura Orgánica",
@@ -435,17 +573,29 @@ def seed_database():
                     "requisitos_ingreso": "Ciclo básico",
                     "informacion": "Invernadero experimental.",
                     "institucion_id": 5,
-                    "ciudades": [ciudad_objs[15]]  # Salto
+                    "ciudades": ["Salto", "Virtual"]
                 }
             ]
-            
+            # Validar y poblar cursos solo con ciudades válidas
             for curso_data in cursos_data:
-                ciudades = curso_data.pop("ciudades")  # Extraer ciudades del dict
-                curso = Curso(**curso_data)
-                curso.ciudades = ciudades  # Asignar ciudades usando la relación many-to-many
+                ciudades_validas = instituciones_sedes[curso_data["institucion_id"]]
+                ciudades_final = [c for c in curso_data["ciudades"] if c in ciudades_validas]
+                if not ciudades_final:
+                    print(f"⚠️  Curso '{curso_data['nombre']}' no tiene ciudades válidas para la institución. No se insertará.")
+                    continue
+                ciudad_objs_final = [session.exec(select(Ciudad).where(Ciudad.nombre == c)).first() for c in ciudades_final]
+                curso = Curso(
+                    nombre=curso_data["nombre"],
+                    nivel=curso_data["nivel"],
+                    duracion_numero=curso_data["duracion_numero"],
+                    duracion_unidad=curso_data["duracion_unidad"],
+                    requisitos_ingreso=curso_data["requisitos_ingreso"],
+                    informacion=curso_data["informacion"],
+                    institucion_id=curso_data["institucion_id"]
+                )
+                curso.ciudades = ciudad_objs_final
                 session.add(curso)
-                print(f"   ✅ {curso.nombre}")
-            
+                print(f"   ✅ {curso.nombre} ({', '.join(ciudades_final)})")
             session.commit()
             
             print("\n🎉 ¡Base de datos poblada exitosamente!")

@@ -133,6 +133,10 @@ class State(rx.State):
     lugar_seleccionado: str = ""                         # Filtro por lugar
     busqueda_texto: str = ""  # Filtro de búsqueda manual
     
+    # === CONTROL DE LIMPIEZA DE FILTROS ===
+    mantener_filtro_institucion: bool = False            # Flag para mantener filtro de institución al cargar página
+    mantener_filtro_lugar: bool = False                  # Flag para mantener filtro de lugar al cargar página
+    
     # === DATOS DE INSTITUCIONES ===
     instituciones_nombres: List[str] = []                # Lista de nombres para filtro dropdown
     instituciones_info: List[Dict[str, Any]] = []        # Datos completos para galería
@@ -143,7 +147,9 @@ class State(rx.State):
     # === UI CONTROL - MODAL DE INSTITUCIONES ===
     is_dialog_open: bool = False                         # Control modal detalle institución
     selected_institution: Dict[str, Any] = {}           # Institución seleccionada en modal
+    selected_institution_sedes: List[Dict[str, Any]] = [] # Sedes de la institución seleccionada
     ciudad_filtro_instituciones: str = ""                # Filtro de ciudad para instituciones
+    expanded_sede_id: Optional[int] = None               # ID de la sede expandida en el acordeón
     
     # === RESPONSIVE DESIGN ===
     is_mobile: bool = False                              # Detector de dispositivos móviles
@@ -172,15 +178,22 @@ class State(rx.State):
     
     # === DATOS ADMIN ===
     admin_cursos: List[Dict[str, Any]] = []              # Cursos de la institución del admin
+    admin_sedes: List[Dict[str, Any]] = []               # Sedes de la institución del admin
     
     # === UI CONTROL - FORMULARIO CURSOS ===
     show_curso_dialog: bool = False                      # Control modal formulario curso
     is_editing: bool = False                             # Modo edición vs creación
     curso_a_editar: Dict[str, Any] = {}                  # Datos del curso en edición
     
+    # === UI CONTROL - FORMULARIO SEDES ===
+    show_sede_dialog: bool = False                       # Control modal formulario sede
+    is_editing_sede: bool = False                        # Modo edición vs creación para sedes
+    sede_a_editar: Dict[str, Any] = {}                   # Datos de la sede en edición
+    
     # === UI CONTROL - CONFIRMACIÓN ELIMINAR ===
     show_delete_alert: bool = False                      # Control modal confirmación
     curso_a_eliminar_id: int = -1                        # ID del curso a eliminar
+    sede_a_eliminar_id: int = -1                         # ID de la sede a eliminar
     
     # === CAMPOS DEL FORMULARIO CURSO ===
     # Campos individuales para binding directo con inputs del formulario
@@ -191,7 +204,18 @@ class State(rx.State):
     form_requisitos_ingreso: str = ""                    # Campo requisitos previos
     form_lugar: str = ""                                 # Campo lugar donde se dicta el curso
     form_informacion: str = ""                           # Campo información adicional
+    # === NUEVO: soporte para selección múltiple de ciudades ===
+    form_ciudades: List[str] = []                        # Lista de ciudades seleccionadas en el formulario
+    form_ciudades_opciones: List[str] = []               # Opciones de ciudades válidas para la institución
     
+    # === CAMPOS DEL FORMULARIO SEDE ===
+    # Campos individuales para binding directo con inputs del formulario de sedes
+    form_sede_direccion: str = ""                        # Campo dirección de la sede
+    form_sede_telefono: str = ""                         # Campo teléfono de la sede
+    form_sede_email: str = ""                            # Campo email de la sede
+    form_sede_web: str = ""                              # Campo sitio web de la sede
+    form_sede_ciudad: str = ""                           # Campo ciudad de la sede
+
     # === OPCIONES PARA DROPDOWNS ===
     # Estas opciones se cargan desde constants.py y se usan en formularios
     opciones_nivel: List[str] = CursosConstants.NIVELES                    # ["Bachillerato", "Terciario", ...]
@@ -212,7 +236,17 @@ class State(rx.State):
 
     def aplicar_filtros(self):
         """Aplica los filtros seleccionados a los cursos."""
+        print(f"[DEBUG] aplicar_filtros - Filtros activos:")
+        print(f"  - institucion_seleccionada: '{self.institucion_seleccionada}'")
+        print(f"  - lugar_seleccionado: '{self.lugar_seleccionado}'")
+        print(f"  - nivel_seleccionado: '{self.nivel_seleccionado}'")
+        print(f"  - requisito_seleccionado: '{self.requisito_seleccionado}'")
+        print(f"  - busqueda_texto: '{self.busqueda_texto}'")
+        
         cursos_filtrados = []
+        total_cursos = len(self.cursos_originales)
+        filtrados_por_institucion = 0
+        filtrados_por_lugar = 0
         
         for curso in self.cursos_originales:
             # Aplicar filtro de nivel
@@ -224,12 +258,16 @@ class State(rx.State):
                 continue
             
             # Aplicar filtro de institución
-            if self.institucion_seleccionada and curso['institucion'] != self.institucion_seleccionada:
-                continue
+            if self.institucion_seleccionada:
+                if curso['institucion'] != self.institucion_seleccionada:
+                    filtrados_por_institucion += 1
+                    continue
             
             # Aplicar filtro de lugar
-            if self.lugar_seleccionado and self.lugar_seleccionado not in curso['lugar']:
-                continue
+            if self.lugar_seleccionado:
+                if self.lugar_seleccionado not in curso['lugar']:
+                    filtrados_por_lugar += 1
+                    continue
             
             # Filtro de texto manual
             if self.busqueda_texto:
@@ -238,6 +276,21 @@ class State(rx.State):
                     continue
             
             cursos_filtrados.append(curso)
+        
+        print(f"[DEBUG] aplicar_filtros - Resultados:")
+        print(f"  - Total cursos: {total_cursos}")
+        print(f"  - Filtrados por institución: {filtrados_por_institucion}")
+        print(f"  - Filtrados por lugar: {filtrados_por_lugar}")
+        print(f"  - Cursos finales: {len(cursos_filtrados)}")
+        
+        # Debug: mostrar algunos cursos para verificar nombres de instituciones
+        if self.institucion_seleccionada:
+            print(f"[DEBUG] aplicar_filtros - Verificando nombres de instituciones:")
+            instituciones_en_cursos = set()
+            for curso in self.cursos_originales[:5]:  # Solo los primeros 5
+                instituciones_en_cursos.add(curso.get('institucion', 'Sin institución'))
+            print(f"  - Instituciones en cursos: {instituciones_en_cursos}")
+            print(f"  - Buscando: '{self.institucion_seleccionada}'")
         
         self.cursos = cursos_filtrados
         
@@ -273,6 +326,11 @@ class State(rx.State):
         from .database import obtener_instituciones_con_sedes_por_ciudad
         self.instituciones_info = obtener_instituciones_con_sedes_por_ciudad(ciudad)
 
+    def cargar_sedes_como_tarjetas(self, ciudad: str = None):
+        """Carga las sedes como tarjetas individuales, opcionalmente filtradas por ciudad."""
+        from .database import obtener_sedes_como_tarjetas
+        self.instituciones_info = obtener_sedes_como_tarjetas(ciudad)
+
     def cargar_ciudades_nombres(self):
         """Carga nombres de ciudades con cache inteligente."""
         if not self.ciudades_cache_loaded:
@@ -285,6 +343,36 @@ class State(rx.State):
     def cargar_datos_cursos_page(self):
         """Carga los datos iniciales de la página de cursos con optimización de cold start."""
         print("[PERFORMANCE] cargar_datos_cursos_page ejecutándose")
+        print(f"[DEBUG] cargar_datos_cursos_page - Estado inicial de filtros:")
+        print(f"  - institucion_seleccionada: '{self.institucion_seleccionada}'")
+        print(f"  - lugar_seleccionado: '{self.lugar_seleccionado}'")
+        print(f"  - mantener_filtro_institucion: {self.mantener_filtro_institucion}")
+        print(f"  - mantener_filtro_lugar: {self.mantener_filtro_lugar}")
+        
+        # === LIMPIAR FILTROS AL CARGAR LA PÁGINA ===
+        # Limpiar filtros básicos
+        self.nivel_seleccionado = ""
+        self.requisito_seleccionado = ""
+        self.busqueda_texto = ""
+        
+        # Solo limpiar institución si no se debe mantener
+        if not self.mantener_filtro_institucion:
+            self.institucion_seleccionada = ""
+            print("[PERFORMANCE] Todos los filtros limpiados al cargar página")
+        else:
+            print("[PERFORMANCE] Filtros limpiados excepto institución")
+            self.mantener_filtro_institucion = False  # Resetear flag para próximas cargas
+        
+        # Solo limpiar lugar si no se debe mantener
+        if not self.mantener_filtro_lugar:
+            self.lugar_seleccionado = ""
+        else:
+            print("[PERFORMANCE] Filtro de lugar mantenido")
+            self.mantener_filtro_lugar = False  # Resetear flag para próximas cargas
+        
+        print(f"[DEBUG] cargar_datos_cursos_page - Estado final de filtros:")
+        print(f"  - institucion_seleccionada: '{self.institucion_seleccionada}'")
+        print(f"  - lugar_seleccionado: '{self.lugar_seleccionado}'")
         
         # === PROGRESSIVE LOADING PARA COLD START ===
         # En primera carga: mostrar página inmediatamente, cargar datos en background
@@ -316,15 +404,27 @@ class State(rx.State):
 
     def cargar_datos_instituciones_page(self):
         """Carga los datos iniciales de la página de instituciones."""
-        print("[PERFORMANCE] cargar_datos_instituciones_page ejecutándose")
+        print("[DEBUG] cargar_datos_instituciones_page ejecutándose")
+        
+        # Limpiar estado del modal al cargar la página
+        self.limpiar_modal_institucion()
+        
+        # Limpiar filtro de ciudad para mostrar todas las instituciones
+        self.ciudad_filtro_instituciones = ""
         
         # Cargar ciudades para el filtro
         self.cargar_ciudades_nombres()
+        print(f"[DEBUG] Ciudades cargadas: {len(self.ciudades_nombres)}")
         
-        # Cargar instituciones con sedes (sin filtro inicial)
-        self.cargar_instituciones_con_sedes()
+        # Cargar sedes como tarjetas individuales (sin filtro inicial)
+        self.cargar_sedes_como_tarjetas()
+        print(f"[DEBUG] Sedes cargadas: {len(self.instituciones_info)}")
         
-        print(f"[PERFORMANCE] Datos de instituciones cargados - Instituciones: {len(self.instituciones_info)}")
+        # Debug: mostrar las primeras 3 sedes
+        for i, sede in enumerate(self.instituciones_info[:3]):
+            print(f"[DEBUG] Sede {i+1}: {sede.get('nombre', 'Sin nombre')} - {sede.get('ciudad', 'Sin ciudad')}")
+        
+        print(f"[DEBUG] Datos de instituciones cargados - Tarjetas de sedes: {len(self.instituciones_info)}")
 
     def actualizar_nivel_seleccionado(self, nivel: str):
         self.nivel_seleccionado = "" if nivel == "Todos" else nivel
@@ -371,21 +471,96 @@ class State(rx.State):
     def open_institution_dialog(self, institution: dict):
         self.is_dialog_open = True
         self.selected_institution = institution
+        
+        # Verificar si es una institución virtual (tiene ciudad "Virtual")
+        if institution.get("ciudad") == "Virtual":
+            # Crear una sede virtual especial
+            sede_virtual = {
+                "id": None,
+                "nombre": "Cursos Virtuales",
+                "direccion": "Modalidad online",
+                "telefono": "N/A",
+                "email": "N/A",
+                "web": "N/A",
+                "ciudad": "Virtual",
+                "institucion_nombre": institution.get("institucion_nombre", institution.get("nombre", ""))
+            }
+            self.selected_institution_sedes = [sede_virtual]
+        else:
+            # Cargar las sedes físicas de la institución
+            from .database import obtener_sedes_fisicas_por_institucion
+            self.selected_institution_sedes = obtener_sedes_fisicas_por_institucion(institution.get("institucion_id", institution.get("id")))
 
     def set_dialog_open(self, is_open: bool):
         self.is_dialog_open = is_open
+        # Si se está cerrando el modal, limpiar también la institución seleccionada
+        if not is_open:
+            self.selected_institution = {}
+    
+    def limpiar_modal_institucion(self):
+        """Limpia completamente el estado del modal de institución."""
+        self.is_dialog_open = False
+        self.selected_institution = {}
+        self.selected_institution_sedes = []
+        self.expanded_sede_id = None  # Limpiar también la sede expandida
 
     def go_to_institution_courses(self):
-        self.institucion_seleccionada = self.selected_institution.get("nombre", "")
+        # Usar el nombre de la institución, no el de la sede
+        self.institucion_seleccionada = self.selected_institution.get("institucion_nombre", "")
+        # Marcar que se debe mantener el filtro de institución
+        self.mantener_filtro_institucion = True
+        # Cerrar el modal antes de redirigir
+        self.limpiar_modal_institucion()
+        return rx.redirect("/cursos")
+    
+    def go_to_sede_courses(self, sede: dict):
+        """Navega a la página de cursos con filtros específicos de sede."""
+        print(f"[DEBUG] go_to_sede_courses - Datos de sede recibidos: {sede}")
+        
+        # Obtener el nombre de la institución
+        # Si es una sede virtual, usar el nombre de la institución desde la sede
+        if sede.get("ciudad") == "Virtual":
+            institucion_nombre = sede.get("institucion_nombre", "")
+        else:
+            # Usar siempre el nombre de la institución seleccionada
+            institucion_nombre = self.selected_institution.get("nombre", "")
+        
+        # Establecer filtros específicos de la sede
+        self.institucion_seleccionada = institucion_nombre
+        self.lugar_seleccionado = sede.get("ciudad", "")
+        
+        # Marcar que se deben mantener los filtros de institución y lugar
+        self.mantener_filtro_institucion = True
+        self.mantener_filtro_lugar = True
+        
+        print(f"[DEBUG] go_to_sede_courses - Filtros establecidos:")
+        print(f"  - Institución: '{self.institucion_seleccionada}'")
+        print(f"  - Lugar: '{self.lugar_seleccionado}'")
+        print(f"  - mantener_filtro_institucion: {self.mantener_filtro_institucion}")
+        print(f"  - mantener_filtro_lugar: {self.mantener_filtro_lugar}")
+        
+        # Cerrar el modal antes de redirigir
+        self.limpiar_modal_institucion()
         return rx.redirect("/cursos")
 
     def actualizar_filtro_ciudad_instituciones(self, ciudad: str):
         """Actualiza el filtro de ciudad para instituciones y recarga los datos."""
-        self.ciudad_filtro_instituciones = "" if ciudad == "Todas" else ciudad
-        if self.ciudad_filtro_instituciones:
-            self.cargar_instituciones_con_sedes(self.ciudad_filtro_instituciones)
+        self.ciudad_filtro_instituciones = ciudad
+        if not ciudad or ciudad == "Todas":
+            self.cargar_sedes_como_tarjetas()  # Sin filtro
+        elif ciudad == "Virtual":
+            from .database import obtener_instituciones_con_cursos_virtuales
+            # Obtener instituciones que tienen cursos virtuales
+            self.instituciones_info = obtener_instituciones_con_cursos_virtuales()
         else:
-            self.cargar_instituciones_con_sedes()  # Sin filtro
+            self.cargar_sedes_como_tarjetas(ciudad)
+    
+    def toggle_sede_acordeon(self, sede_id: int):
+        """Alterna la expansión de una sede en el acordeón."""
+        if self.expanded_sede_id == sede_id:
+            self.expanded_sede_id = None  # Cerrar si ya está abierta
+        else:
+            self.expanded_sede_id = sede_id  # Abrir esta sede
 
     def toggle_login_dialog(self):
         self.show_login_dialog = not self.show_login_dialog
@@ -469,12 +644,17 @@ class State(rx.State):
         self.redirect_url = ""
         # Limpiar datos del admin
         self.admin_cursos = []
+        self.admin_sedes = []
         self.show_curso_dialog = False
         self.is_editing = False
         self.curso_a_editar = {}
+        self.show_sede_dialog = False
+        self.is_editing_sede = False
+        self.sede_a_editar = {}
         self.show_delete_alert = False
         self.curso_a_eliminar_id = -1
-        # Limpiar campos del formulario
+        self.sede_a_eliminar_id = -1
+        # Limpiar campos del formulario de cursos
         self.form_nombre = ""
         self.form_nivel = ""
         self.form_duracion_numero = ""
@@ -482,6 +662,14 @@ class State(rx.State):
         self.form_requisitos_ingreso = ""
         self.form_lugar = ""
         self.form_informacion = ""
+        self.form_ciudades = [] # Limpiar ciudades
+        self.form_ciudades_opciones = [] # Limpiar ciudades válidas
+        # Limpiar campos del formulario de sedes
+        self.form_sede_direccion = ""
+        self.form_sede_telefono = ""
+        self.form_sede_email = ""
+        self.form_sede_web = ""
+        self.form_sede_ciudad = ""
         return rx.redirect("/")
 
     def require_authentication(self):
@@ -539,6 +727,21 @@ class State(rx.State):
     def set_form_informacion(self, value: str):
         self.form_informacion = value
 
+    def set_form_ciudades(self, value):
+        # value puede venir como lista o string (de un select múltiple)
+        if isinstance(value, str):
+            # Reflex puede enviar un string separado por comas
+            self.form_ciudades = value.split(",") if value else []
+        else:
+            self.form_ciudades = value or []
+
+    def toggle_ciudad(self, ciudad: str, checked: bool):
+        if checked:
+            if ciudad not in self.form_ciudades:
+                self.form_ciudades = self.form_ciudades + [ciudad]
+        else:
+            self.form_ciudades = [c for c in self.form_ciudades if c != ciudad]
+
     def set_curso_a_editar_field(self, field: str, value: Any):
         """Actualiza un campo del diccionario del curso a editar."""
         self.curso_a_editar[field] = value
@@ -566,11 +769,22 @@ class State(rx.State):
         self.form_requisitos_ingreso = ""
         self.form_lugar = ""
         self.form_informacion = ""
+        self.form_ciudades = []
+        self.form_ciudades_opciones = []
         self.curso_a_editar = {}
         self.is_editing = False
 
     def abrir_dialogo_agregar(self):
         self._reset_form_fields()
+        self.form_ciudades = []
+        # Cargar ciudades válidas para la institución
+        self.form_ciudades_opciones = []
+        if self.logged_in_user:
+            # Buscar la institución y sus sedes
+            for inst in self.instituciones_info:
+                if inst["id"] == self.logged_in_user.institucion_id:
+                    self.form_ciudades_opciones = [sede["ciudad"] for sede in inst.get("sedes", [])]
+                    break
         self.show_curso_dialog = True
 
     def abrir_dialogo_editar(self, curso: dict):
@@ -584,6 +798,16 @@ class State(rx.State):
         self.form_requisitos_ingreso = curso.get("requisitos_ingreso", "")
         self.form_lugar = curso.get("lugar", "")
         self.form_informacion = curso.get("informacion", "")
+        # Precargar ciudades (parsear string separado por coma a lista)
+        lugar_str = curso.get("lugar", "")
+        self.form_ciudades = [c.strip() for c in lugar_str.split(",") if c.strip()] if lugar_str else []
+        # Cargar ciudades válidas para la institución
+        self.form_ciudades_opciones = []
+        if self.logged_in_user:
+            for inst in self.instituciones_info:
+                if inst["id"] == self.logged_in_user.institucion_id:
+                    self.form_ciudades_opciones = [sede["ciudad"] for sede in inst.get("sedes", [])]
+                    break
         self.show_curso_dialog = True
 
     def cerrar_dialogo(self):
@@ -607,6 +831,8 @@ class State(rx.State):
             "lugar": self.form_lugar,
             "informacion": self.form_informacion,
             "institucion_id": self.logged_in_user.institucion_id,
+            # NUEVO: enviar ciudades seleccionadas
+            "ciudades": self.form_ciudades,
         }
 
         try:
@@ -660,6 +886,11 @@ class State(rx.State):
             eliminar_curso(self.curso_a_eliminar_id)
             self.cargar_cursos_admin()
             self.cerrar_alerta_eliminar()
+        elif self.sede_a_eliminar_id != -1:
+            from .database import eliminar_sede
+            eliminar_sede(self.sede_a_eliminar_id)
+            self.cargar_sedes_admin()
+            self.cerrar_alerta_eliminar_sede()
 
     # Funciones para manejar eventos de AG Grid
     def handle_ag_grid_edit(self, curso_data: dict):
@@ -683,3 +914,128 @@ class State(rx.State):
             curso_id = event_data.get("id", -1)
             if curso_id != -1:
                 self.abrir_alerta_eliminar(curso_id)
+
+    # ================================================================================
+    # FUNCIONES DE GESTIÓN DE SEDES
+    # ================================================================================
+
+    def cargar_sedes_admin(self):
+        """Carga las sedes para el administrador logueado."""
+        print(f"[DEBUG] cargar_sedes_admin llamado")
+        print(f"[DEBUG] logged_in_user: {self.logged_in_user}")
+        if self.logged_in_user:
+            print(f"[DEBUG] Institución ID: {self.logged_in_user.institucion_id}")
+            from .database import obtener_sedes_fisicas_por_institucion
+            self.admin_sedes = obtener_sedes_fisicas_por_institucion(self.logged_in_user.institucion_id)
+            print(f"[DEBUG] Sedes cargadas: {len(self.admin_sedes)}")
+            for sede in self.admin_sedes:
+                print(f"[DEBUG] Sede: {sede['nombre']}")
+        else:
+            print(f"[DEBUG] No hay usuario logueado")
+            self.admin_sedes = []
+
+    def _reset_sede_form_fields(self):
+        """Limpia los campos del formulario de sede."""
+        self.form_sede_direccion = ""
+        self.form_sede_telefono = ""
+        self.form_sede_email = ""
+        self.form_sede_web = ""
+        self.form_sede_ciudad = ""
+        self.sede_a_editar = {}
+        self.is_editing_sede = False
+
+    def abrir_dialogo_agregar_sede(self):
+        """Abre el diálogo para agregar una nueva sede."""
+        self._reset_sede_form_fields()
+        self.show_sede_dialog = True
+
+    def abrir_dialogo_editar_sede(self, sede: dict):
+        """Abre el diálogo para editar una sede existente."""
+        self.is_editing_sede = True
+        self.sede_a_editar = sede
+        # Precargar formulario
+        self.form_sede_direccion = sede.get("direccion", "")
+        self.form_sede_telefono = sede.get("telefono", "")
+        self.form_sede_email = sede.get("email", "")
+        self.form_sede_web = sede.get("web", "")
+        self.form_sede_ciudad = sede.get("ciudad", "")
+        self.show_sede_dialog = True
+
+    def cerrar_dialogo_sede(self):
+        """Cierra el diálogo del formulario de sede y resetea los campos."""
+        self.show_sede_dialog = False
+        self.is_editing_sede = False
+        self._reset_sede_form_fields()
+
+    def guardar_sede(self):
+        """Guarda una sede nueva o modifica una existente."""
+        if not self.logged_in_user:
+            return rx.window_alert("Error: No hay usuario autenticado.")
+
+        # Construir el diccionario de datos de la sede desde el formulario
+        sede_data = {
+            "direccion": self.form_sede_direccion,
+            "telefono": self.form_sede_telefono,
+            "email": self.form_sede_email,
+            "web": self.form_sede_web,
+            "ciudad": self.form_sede_ciudad,
+            "institucion_id": self.logged_in_user.institucion_id,
+        }
+
+        try:
+            if self.is_editing_sede:
+                # Modificar sede existente
+                sede_id = self.sede_a_editar.get("id")
+                if sede_id:
+                    from .database import modificar_sede
+                    modificar_sede(sede_id, sede_data)
+                    print(f"Sede modificada con ID: {sede_id}")
+                else:
+                    return rx.window_alert("Error: No se encontró el ID de la sede a editar.")
+            else:
+                # Agregar nueva sede
+                from .database import agregar_sede
+                agregar_sede(sede_data)
+                print("Nueva sede agregada.")
+            
+            # Recargar la lista de sedes y cerrar el diálogo
+            self.cargar_sedes_admin()
+            self.cerrar_dialogo_sede()
+
+        except Exception as e:
+            print(f"Error al guardar la sede: {e}")
+            return rx.window_alert(f"No se pudo guardar la sede: {e}")
+
+    def abrir_alerta_eliminar_sede(self, sede_id: int):
+        """Abre la alerta de confirmación para eliminar una sede."""
+        self.sede_a_eliminar_id = sede_id
+        self.show_delete_alert = True
+
+    def cerrar_alerta_eliminar_sede(self):
+        """Cierra la alerta de eliminación de sede."""
+        self.sede_a_eliminar_id = -1
+        self.show_delete_alert = False
+
+    def confirmar_eliminacion_sede(self):
+        """Confirma la eliminación de una sede."""
+        if self.sede_a_eliminar_id != -1:
+            from .database import eliminar_sede
+            eliminar_sede(self.sede_a_eliminar_id)
+            self.cargar_sedes_admin()
+            self.cerrar_alerta_eliminar_sede()
+
+    # Setters para los campos del formulario de sede
+    def set_form_sede_direccion(self, value: str):
+        self.form_sede_direccion = value
+        
+    def set_form_sede_telefono(self, value: str):
+        self.form_sede_telefono = value
+        
+    def set_form_sede_email(self, value: str):
+        self.form_sede_email = value
+        
+    def set_form_sede_web(self, value: str):
+        self.form_sede_web = value
+        
+    def set_form_sede_ciudad(self, value: str):
+        self.form_sede_ciudad = value

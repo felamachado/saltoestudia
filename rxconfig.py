@@ -18,4 +18,6 @@ config = rx.Config(
     ],
     # Configuración de Tailwind - Deshabilitado porque no lo usamos
     tailwind=None,
+    # Deshabilitar plugins problemáticos
+    disable_plugins=['reflex.plugins.sitemap.SitemapPlugin'],
 )
