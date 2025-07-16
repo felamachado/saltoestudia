@@ -23,11 +23,14 @@ config = rx.Config(
     # Configuración de Vite para permitir el dominio de producción
     vite_config={
         "server": {
-            "allowedHosts": "all",
+            "allowedHosts": ["all"],
             "host": "0.0.0.0",
             "port": 3000,
             "strictPort": True,
-            "cors": True
+            "cors": True,
+            "hmr": {
+                "host": "saltoestudia.infra.com.uy"
+            }
         }
     }
 )
