@@ -139,3 +139,4 @@ yarn-debug.log*
 yarn-error.log*
 yarn.lock
 ~/.ssh/github_actions_deploy*
+config-desarrollo.env
