@@ -76,7 +76,7 @@ if command -v docker &> /dev/null; then
         print_success "✅ Docker ejecutándose"
         
         # Verificar contenedor
-        if docker compose -f docker-compose.dev.yml ps | grep -q "Up"; then
+        if docker compose -f docker-compose.desarrollo.yml ps | grep -q "Up"; then
             print_success "✅ Contenedor ejecutándose"
             
             # Verificar que la aplicación responde
@@ -123,7 +123,7 @@ fi
 
 # 5. Verificar archivos críticos
 print_status "5. Verificando archivos críticos..."
-CRITICAL_FILES=("saltoestudia/database.py" "saltoestudia/state.py" "docker-compose.dev.yml" "requirements.txt")
+CRITICAL_FILES=("saltoestudia/database.py" "saltoestudia/state.py" "docker-compose.desarrollo.yml" "requirements.txt")
 for file in "${CRITICAL_FILES[@]}"; do
     if [ -f "$file" ]; then
         print_success "✅ $file existe"
@@ -169,7 +169,7 @@ else
     echo "   2. Si persisten problemas, revisar logs:"
     echo "      docker logs saltoestudia-dev-app -f"
     echo "   3. Para limpiar todo:"
-    echo "      docker compose -f docker-compose.dev.yml down"
+    echo "      docker compose -f docker-compose.desarrollo.yml down"
     echo "      ./scripts/start-project.sh docker"
     echo ""
     print_warning "Revisa la documentación en TROUBLESHOOTING.md"
@@ -179,7 +179,7 @@ echo ""
 echo "🔧 Comandos útiles:"
 echo "   Iniciar:     ./scripts/start-project.sh docker"
 echo "   Ver logs:    docker logs saltoestudia-dev-app -f"
-echo "   Detener:     docker compose -f docker-compose.dev.yml down"
+echo "   Detener:     docker compose -f docker-compose.desarrollo.yml down"
 echo "   Verificar:   ./scripts/verify-setup.sh"
 echo ""
 

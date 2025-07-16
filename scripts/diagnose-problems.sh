@@ -65,7 +65,7 @@ fi
 
 echo ""
 echo "2. Verificando contenedor..."
-if docker compose -f docker-compose.dev.yml ps | grep -q "Up"; then
+if docker compose -f docker-compose.desarrollo.yml ps | grep -q "Up"; then
     print_success "Contenedor está corriendo"
 else
     print_error "Contenedor no está corriendo"
@@ -90,7 +90,7 @@ fi
 
 echo ""
 echo "4. Verificando base de datos..."
-DB_CHECK=$(docker compose -f docker-compose.dev.yml exec -T saltoestudia-dev python -c "
+DB_CHECK=$(docker compose -f docker-compose.desarrollo.yml exec -T saltoestudia-dev python -c "
 from saltoestudia.database import obtener_cursos, obtener_instituciones
 try:
     cursos = obtener_cursos()
@@ -106,7 +106,7 @@ if [[ $DB_CHECK == OK* ]]; then
         print_success "Base de datos OK: $cursos cursos, $instituciones instituciones"
     else
         print_warning "Base de datos vacía: $cursos cursos, $instituciones instituciones"
-        print_solution "Ejecuta: docker compose -f docker-compose.dev.yml exec saltoestudia-dev python seed.py"
+        print_solution "Ejecuta: docker compose -f docker-compose.desarrollo.yml exec saltoestudia-dev python seed.py"
     fi
 else
     print_error "Error en base de datos: $DB_CHECK"
@@ -125,11 +125,11 @@ fi
 
 echo ""
 echo "6. Verificando logs del contenedor..."
-RECENT_ERRORS=$(docker compose -f docker-compose.dev.yml logs saltoestudia-dev | grep -E "(ERROR|Exception)" | tail -3)
+RECENT_ERRORS=$(docker compose -f docker-compose.desarrollo.yml logs saltoestudia-dev | grep -E "(ERROR|Exception)" | tail -3)
 if [ -n "$RECENT_ERRORS" ]; then
     print_warning "Errores recientes en logs:"
     echo "$RECENT_ERRORS"
-    print_solution "Revisa los logs completos: docker compose -f docker-compose.dev.yml logs saltoestudia-dev"
+    print_solution "Revisa los logs completos: docker compose -f docker-compose.desarrollo.yml logs saltoestudia-dev"
 else
     print_success "No hay errores recientes en logs"
 fi
@@ -155,7 +155,7 @@ echo ""
 
 echo "🔴 PROBLEMA: Contenedor no inicia"
 echo "   CAUSA: Puerto ocupado o Docker no ejecutándose"
-echo "   SOLUCIÓN: docker compose -f docker-compose.dev.yml down && ./scripts/start-project.sh"
+echo "   SOLUCIÓN: docker compose -f docker-compose.desarrollo.yml down && ./scripts/start-project.sh"
 echo ""
 
 echo "🔴 PROBLEMA: Página web no carga"
@@ -177,19 +177,19 @@ echo "🔧 COMANDOS ÚTILES"
 echo "=================="
 echo ""
 echo "📊 Ver estado del contenedor:"
-echo "   docker compose -f docker-compose.dev.yml ps"
+echo "   docker compose -f docker-compose.desarrollo.yml ps"
 echo ""
 echo "📋 Ver logs en tiempo real:"
-echo "   docker compose -f docker-compose.dev.yml logs -f"
+echo "   docker compose -f docker-compose.desarrollo.yml logs -f"
 echo ""
 echo "🔄 Reiniciar aplicación:"
 echo "   ./scripts/start-project.sh"
 echo ""
 echo "🛑 Detener aplicación:"
-echo "   docker compose -f docker-compose.dev.yml down"
+echo "   docker compose -f docker-compose.desarrollo.yml down"
 echo ""
 echo "🗄️ Verificar base de datos:"
-echo "   docker compose -f docker-compose.dev.yml exec saltoestudia-dev python -c \"from saltoestudia.database import obtener_cursos; print(f'Cursos: {len(obtener_cursos())}')\""
+echo "   docker compose -f docker-compose.desarrollo.yml exec saltoestudia-dev python -c \"from saltoestudia.database import obtener_cursos; print(f'Cursos: {len(obtener_cursos())}')\""
 echo ""
 echo "🌐 Acceso a la aplicación:"
 echo "   Frontend: http://localhost:3000"

@@ -114,11 +114,11 @@ start_docker() {
     
     # Detener contenedores existentes
     print_status "Deteniendo contenedores existentes..."
-    docker compose -f docker-compose.dev.yml down 2>/dev/null || true
+    docker compose -f docker-compose.desarrollo.yml down 2>/dev/null || true
     
     # Construir y levantar contenedores
     print_status "Construyendo y levantando contenedores..."
-    docker compose -f docker-compose.dev.yml up -d --build
+    docker compose -f docker-compose.desarrollo.yml up -d --build
     
     # Esperar a que la aplicación esté lista
     print_status "Esperando a que la aplicación esté lista..."
@@ -130,7 +130,7 @@ start_docker() {
         print_status "Frontend: http://localhost:3000"
         print_status "Backend:  http://localhost:8000"
         print_status "Para ver logs: docker logs saltoestudia-dev-app -f"
-        print_status "Para detener: docker compose -f docker-compose.dev.yml down"
+        print_status "Para detener: docker compose -f docker-compose.desarrollo.yml down"
     else
         print_error "La aplicación no está respondiendo"
         print_status "Verificando logs..."
