@@ -4,34 +4,28 @@ Esta carpeta contiene scripts útiles para el desarrollo y mantenimiento del pro
 
 ## 📋 Lista de Scripts
 
-### 🧹 `limpiar_puertos.sh`
-**Propósito:** Limpia procesos que ocupan los puertos 8000 y 3000.
+### 🧹 `reflex-clean.sh`
+**Propósito:** Script para limpiar y ejecutar Reflex (DEPRECADO - usar Docker).
 
 **Uso:**
 ```bash
-./scripts/limpiar_puertos.sh
+./scripts/reflex-clean.sh
 ```
 
-**Características:**
-- Detecta automáticamente procesos en puertos 8000 y 3000
-- Muestra información detallada de los procesos encontrados
-- Pregunta confirmación antes de matar procesos
-- Verifica que los puertos queden libres
-- Instala `lsof` automáticamente si no está disponible
-- Compatible con diferentes distribuciones Linux
+**Nota:** Este script está deprecado. El proyecto ahora se ejecuta exclusivamente en Docker.
 
-### 🚀 `arrancar_app.sh`
-**Propósito:** Arranque completo de la aplicación (limpieza + Reflex).
+### 🚀 `start-project.sh`
+**Propósito:** Arranque completo de la aplicación en Docker.
 
 **Uso:**
 ```bash
-./scripts/arrancar_app.sh
+./scripts/start-project.sh docker
 ```
 
 **Características:**
 - Verifica que estés en la carpeta correcta del proyecto
-- Ejecuta automáticamente la limpieza de puertos
-- Verifica que Reflex esté instalado
+- Verifica que Docker esté instalado
+- Construye y levanta contenedores automáticamente
 - Arranca la aplicación con configuración optimizada
 - Muestra las URLs de acceso
 
@@ -52,11 +46,8 @@ chmod +x scripts/*.sh
 
 ### Verificar que funcionan
 ```bash
-# Probar limpieza de puertos
-./scripts/limpiar_puertos.sh
-
 # Probar arranque completo
-./scripts/arrancar_app.sh
+./scripts/start-project.sh docker
 ```
 
 ## 🔧 Compatibilidad
@@ -76,8 +67,7 @@ Todos los scripts están diseñados para funcionar en:
 
 ### Error: "Permission denied"
 ```bash
-chmod +x scripts/limpiar_puertos.sh
-chmod +x scripts/arrancar_app.sh
+chmod +x scripts/start-project.sh
 ```
 
 ### Error: "lsof not found"

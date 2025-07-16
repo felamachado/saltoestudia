@@ -27,11 +27,8 @@ Plataforma educativa para la gestión de cursos e instituciones educativas en Sa
 git clone <url-del-repositorio>
 cd saltoestudia
 
-# Instalar dependencias
-pip install -r requirements.txt
-
-# Iniciar la aplicación
-reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000
+# Iniciar la aplicación con Docker
+docker compose -f docker-compose.desarrollo.yml up -d --build
 ```
 
 ## 🌐 Acceso a la Aplicación
@@ -86,7 +83,7 @@ No necesitas cambiar configuraciones manualmente.
 ./scripts/setup-env.sh desarrollo
 
 # Iniciar aplicación
-docker compose up -d
+docker compose -f docker-compose.desarrollo.yml up -d --build
 ```
 
 #### Producción (VPS)
@@ -95,12 +92,15 @@ docker compose up -d
 ./scripts/setup-env.sh produccion
 
 # Iniciar aplicación
-docker compose up -d
+docker compose -f docker-compose.production.yml up -d
 ```
 
 ### Configuración Automática
 - **Desarrollo**: Usa `docker-compose.desarrollo.yml` y `config-desarrollo.env`
-- **Producción**: Usa `docker-compose.yml` y `.env` con contraseñas seguras
+- **Producción**: Usa `docker-compose.production.yml` y `.env` con contraseñas seguras
+
+### ⚠️ Importante: Solo Docker
+Este proyecto se ejecuta **exclusivamente en Docker**. No se puede ejecutar Reflex nativo localmente.
 
 > **📋 Para información detallada sobre archivos necesarios y despliegue, consulta [`DEPLOYMENT.md`](DEPLOYMENT.md)**
 
@@ -145,32 +145,32 @@ saltoestudia/
 
 ```bash
 # Ver logs de Docker
-docker logs saltoestudia-app -f
+docker logs saltoestudia-dev-app -f
 
 # Detener aplicación
-docker compose down
+docker compose -f docker-compose.desarrollo.yml down
 
 # Reiniciar aplicación
 ./scripts/start-project.sh docker
 
 # Limpiar y reconstruir
-docker compose down
-docker compose up -d --build
+docker compose -f docker-compose.desarrollo.yml down
+docker compose -f docker-compose.desarrollo.yml up -d --build
 ```
 
 ## 🐛 Solución de Problemas
 
 ### La aplicación no carga datos
 
-1. Verifica que la base de datos existe:
+1. Verifica que la base de datos existe en el contenedor:
    ```bash
-   ls -la data/saltoestudia.db
+   docker exec saltoestudia-dev-app ls -la /app/data/saltoestudia.db
    ```
 
-2. Si no existe, créala:
+2. Si no existe, recréala:
    ```bash
-   python3 init_db.py
-   python3 seed.py
+   docker exec saltoestudia-dev-app python3 init_db.py
+   docker exec saltoestudia-dev-app python3 seed.py
    ```
 
 3. Reinicia la aplicación:
@@ -181,8 +181,8 @@ docker compose up -d --build
 ### Error de permisos en Docker
 
 ```bash
-chmod 666 data/saltoestudia.db
-docker compose restart
+docker exec saltoestudia-dev-app chmod 666 /app/data/saltoestudia.db
+docker compose -f docker-compose.desarrollo.yml restart
 ```
 
 ### Puerto ocupado
@@ -198,7 +198,8 @@ lsof -ti :8000 | xargs -r kill -9
 - **Hot Reload**: Los cambios en el código se aplican automáticamente
 - **Base de Datos**: Los datos persisten entre reinicios
 - **SSL**: En producción se configura automáticamente con Let's Encrypt
-- **Logs**: Usa `docker logs saltoestudia-app -f` para ver logs en tiempo real
+- **Logs**: Usa `docker logs saltoestudia-dev-app -f` para ver logs en tiempo real
+- **Docker Only**: El proyecto se ejecuta exclusivamente en contenedores Docker
 
 ## 🤝 Contribuir
 

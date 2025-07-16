@@ -84,7 +84,7 @@ AttributeError: type object 'State' has no attribute 'opciones_lugar'
 3. ✅ **COMPLETADO** - Verificar persistencia del despliegue
 
 #### **Opcionales:**
-1. Actualizar Reflex a 0.8.2: `pip install reflex --upgrade`
+1. Actualizar Reflex a 0.8.2: `docker exec saltoestudia-dev-app pip install reflex --upgrade`
 2. Resolver conflictos menores de dependencias
 3. Considerar eliminar contenedor de desarrollo duplicado en VPS
 
@@ -92,7 +92,7 @@ AttributeError: type object 'State' has no attribute 'opciones_lugar'
 
 1. **Probar la aplicación localmente:**
    ```bash
-   reflex run
+   ./scripts/start-project.sh docker
    ```
 
 2. **Verificar que la página admin funcione:**

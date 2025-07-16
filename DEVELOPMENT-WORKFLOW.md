@@ -48,8 +48,8 @@ ls -la
 
 ```bash
 # ❌ NO ejecutar Reflex localmente
-python3 -m reflex run
-python3 -m reflex run --loglevel debug
+# python3 -m reflex run
+# python3 -m reflex run --loglevel debug
 
 # ❌ NO usar scripts que mezclen entornos
 bash scripts/arrancar_dev.sh

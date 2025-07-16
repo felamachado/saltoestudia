@@ -1,11 +1,10 @@
 {
   "scripts": {
-    "dev": "reflex run",
-    "dev-clean": "./scripts/reflex-clean.sh",
-    "build": "reflex export",
-    "export": "reflex export",
-    "init": "reflex init",
-    "run": "reflex run"
+    "dev": "docker compose -f docker-compose.desarrollo.yml up -d --build",
+    "build": "docker compose -f docker-compose.production.yml build",
+    "deploy": "./deploy-to-vps.sh",
+    "start": "docker compose -f docker-compose.desarrollo.yml up -d",
+    "run": "docker compose -f docker-compose.desarrollo.yml up -d --build"
   },
   "dependencies": {
     "@chakra-ui/react": "^2.10.3",

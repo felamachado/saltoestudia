@@ -24,7 +24,7 @@ saltoestudia/
 
 | Aspecto | Local | Producción |
 |---------|-------|------------|
-| **Dockerfile** | `reflex run` simple | `reflex run --env prod --frontend-port 3000` |
+| **Dockerfile** | `reflex run` simple | `reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000` |
 | **Proxy** | Sin proxy | Traefik con rutas separadas |
 | **SSL** | HTTP (`ws://`) | HTTPS (`wss://`) |
 | **Puertos** | Directo 3000/8000 | Via Traefik 443 |

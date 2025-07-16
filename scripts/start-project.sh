@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Script para iniciar Salto Estudia en modo local o Docker
-# Uso: ./scripts/start-project.sh [local|docker]
+# Script para iniciar Salto Estudia en modo Docker
+# Uso: ./scripts/start-project.sh [docker|help]
 
 set -e
 
@@ -27,73 +27,6 @@ print_warning() {
 
 print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
-}
-
-# Función para limpiar puertos
-clean_ports() {
-    print_status "Limpiando puertos 3000 y 8000..."
-    pkill -f reflex || true
-    pkill -f "bun run dev" || true
-    lsof -ti :3000 | xargs -r kill -9 2>/dev/null || true
-    lsof -ti :8000 | xargs -r kill -9 2>/dev/null || true
-    sleep 2
-    print_success "Puertos limpiados"
-}
-
-# Función para verificar dependencias
-check_dependencies() {
-    print_status "Verificando dependencias..."
-    
-    if ! command -v python3 &> /dev/null; then
-        print_error "Python3 no está instalado"
-        exit 1
-    fi
-    
-    if ! command -v pip &> /dev/null; then
-        print_error "pip no está instalado"
-        exit 1
-    fi
-    
-    print_success "Dependencias verificadas"
-}
-
-# Función para instalar dependencias
-install_dependencies() {
-    print_status "Instalando dependencias de Python..."
-    pip install -r requirements.txt
-    print_success "Dependencias instaladas"
-}
-
-# Función para iniciar en modo local
-start_local() {
-    print_status "Iniciando Salto Estudia en modo LOCAL..."
-    
-    # Limpiar puertos
-    clean_ports
-    
-    # Verificar que la base de datos existe
-    if [ ! -f "data/saltoestudia.db" ]; then
-        print_warning "Base de datos no encontrada. Creando..."
-        python3 init_db.py
-        python3 seed.py
-    fi
-    
-    # Verificar dependencias
-    check_dependencies
-    
-    # Instalar dependencias si es necesario
-    if [ ! -d ".venv" ] && [ ! -d "venv" ]; then
-        install_dependencies
-    fi
-    
-    print_success "Iniciando aplicación local..."
-    print_status "Frontend: http://localhost:3000"
-    print_status "Backend:  http://localhost:8000"
-    print_status "Presiona Ctrl+C para detener"
-    echo ""
-    
-    # Iniciar Reflex
-    reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000
 }
 
 # Función para iniciar en modo Docker
@@ -146,15 +79,13 @@ show_help() {
     echo "Uso: $0 [OPCIÓN]"
     echo ""
     echo "Opciones:"
-    echo "  local     Iniciar en modo local (sin Docker)"
     echo "  docker    Iniciar en modo Docker (recomendado)"
     echo "  help      Mostrar esta ayuda"
     echo ""
     echo "Ejemplos:"
-    echo "  $0 local   # Inicia en modo local"
     echo "  $0 docker  # Inicia en modo Docker"
     echo ""
-    echo "Nota: Si no se especifica opción, se usa Docker por defecto"
+    echo "Nota: Este proyecto se ejecuta exclusivamente en Docker"
 }
 
 # Función principal
@@ -164,9 +95,6 @@ main() {
     echo ""
     
     case "${1:-docker}" in
-        "local")
-            start_local
-            ;;
         "docker")
             start_docker
             ;;

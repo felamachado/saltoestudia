@@ -96,9 +96,9 @@ pip install -r requirements.txt
   "version": "1.0.0",
   "description": "Plataforma educativa para Salto, Uruguay",
   "scripts": {
-    "dev": "reflex run",
-    "build": "reflex export",
-    "deploy": "reflex deploy"
+    "dev": "docker compose -f docker-compose.desarrollo.yml up -d --build",
+    "build": "docker compose -f docker-compose.production.yml build",
+    "deploy": "./deploy-to-vps.sh"
   },
   "dependencies": {
     "bun": "latest"
@@ -107,9 +107,9 @@ pip install -r requirements.txt
 ```
 
 **Scripts Disponibles**:
-- **`dev`**: Inicia en modo desarrollo
-- **`build`**: Construye para producción
-- **`deploy`**: Despliega la aplicación
+- **`dev`**: Inicia en modo desarrollo con Docker
+- **`build`**: Construye imagen de producción
+- **`deploy`**: Despliega en VPS usando script automatizado
 
 ---
 
