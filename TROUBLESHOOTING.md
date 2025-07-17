@@ -130,6 +130,37 @@ Primer curso: No hay cursos
 chmod 666 data/saltoestudia.db
 ```
 
+### 5. **Error: PostgreSQL no se inicializa en producción**
+
+**Síntomas:**
+```
+Error: Database is uninitialized and superuser password is not specified.
+You must specify POSTGRES_PASSWORD to a non-empty value for the superuser.
+```
+
+**Causa:** El archivo `.env` en el VPS no tiene configurada la variable `DB_PASSWORD` para PostgreSQL.
+
+**Solución Definitiva:**
+```bash
+# 1. Verificar que el archivo .env en el VPS tenga la configuración correcta:
+DATABASE_URL=postgresql://saltoestudia:SaltoEstudia2024_Postgres!@postgres:5432/saltoestudia
+REFLEX_DB_URL=postgresql://saltoestudia:SaltoEstudia2024_Postgres!@postgres:5432/saltoestudia
+DB_PASSWORD=SaltoEstudia2024_Postgres!
+
+# 2. Reiniciar contenedores después de actualizar .env:
+ssh ubuntu@150.230.30.198
+cd /srv/docker/saltoestudia
+docker compose down
+docker compose up -d
+
+# 3. Inicializar base de datos:
+docker compose exec backend reflex db migrate
+docker compose exec backend python seed.py
+docker compose restart backend
+```
+
+**Prevención:** Siempre verificar la configuración del archivo `.env` antes del despliegue (ver DEPLOY-VPS.md).
+
 ## 🔧 Scripts de Prevención
 
 ### Script de Inicio Automático (`scripts/start-project.sh`)

@@ -36,6 +36,47 @@ saltoestudia/
 
 ## 🚀 Desplegar a VPS
 
+### **⚠️ CONFIGURACIÓN CRÍTICA DEL ARCHIVO .ENV**
+
+**IMPORTANTE**: Antes de desplegar, asegúrate de que el archivo `.env` en el VPS esté configurado correctamente para PostgreSQL:
+
+```bash
+# CONFIGURACIÓN DE ENTORNO - SALTO ESTUDIA (PRODUCCIÓN)
+# ========================================
+
+# === BASE DE DATOS POSTGRESQL ===
+DATABASE_URL=postgresql://saltoestudia:SaltoEstudia2024_Postgres!@postgres:5432/saltoestudia
+REFLEX_DB_URL=postgresql://saltoestudia:SaltoEstudia2024_Postgres!@postgres:5432/saltoestudia
+DB_PASSWORD=SaltoEstudia2024_Postgres!
+
+# === CONTRASEÑAS INDIVIDUALES DE USUARIOS ADMINISTRADORES ===
+DEFAULT_SEED_PASSWORD=SaltoEstudia2024_Default!
+CENUR_PASSWORD=Cenur_Segura_2024!
+IAE_PASSWORD=IAE_Admin_2024!
+CATALINA_PASSWORD=Catalina_Tech_2024!
+ADMINISTRACION_PASSWORD=Admin_Escuela_2024!
+AGRARIA_PASSWORD=Agraria_Campo_2024!
+
+# === CONFIGURACIÓN DE PRODUCCIÓN ===
+REFLEX_ENV=production
+```
+
+**Si el archivo `.env` no está configurado correctamente:**
+- PostgreSQL no se inicializará
+- Los contenedores se reiniciarán constantemente
+- La aplicación no mostrará datos dinámicos
+
+**Para actualizar el .env en el VPS:**
+```bash
+# Opción 1: Crear archivo local y subirlo
+scp env.production ubuntu@150.230.30.198:/srv/docker/saltoestudia/.env
+
+# Opción 2: Editar directamente en el VPS
+ssh ubuntu@150.230.30.198
+cd /srv/docker/saltoestudia
+nano .env
+```
+
 ### **Método 1: Script Automatizado (Recomendado)**
 
 ```bash
@@ -99,6 +140,33 @@ El script `scripts/sync-database.sh` se ejecuta automáticamente al iniciar el b
 - ✅ Ejecuta migraciones si faltan
 - ✅ Ejecuta seed si no hay datos
 - ✅ Verifica que todo esté funcionando
+
+### **🔄 Inicialización Manual de Base de Datos (Si es necesario):**
+
+Si los contenedores están corriendo pero no hay datos, ejecuta manualmente:
+
+```bash
+# Conectar al VPS
+ssh ubuntu@150.230.30.198
+
+# Ir al directorio del proyecto
+cd /srv/docker/saltoestudia
+
+# Ejecutar migraciones
+docker compose exec backend reflex db migrate
+
+# Poblar base de datos con datos iniciales
+docker compose exec backend python seed.py
+
+# Reiniciar backend para aplicar cambios
+docker compose restart backend
+```
+
+**Datos que se crean automáticamente:**
+- 📚 6 instituciones con sus sedes
+- 👥 6 usuarios administradores con contraseñas individuales
+- 🏙️ 18 ciudades del Uruguay
+- 📖 10 cursos de diferentes categorías
 
 ---
 

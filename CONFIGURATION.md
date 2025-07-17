@@ -6,7 +6,69 @@ Este documento describe todos los archivos de configuración del proyecto Salto 
 
 ## 🔧 Archivos de Configuración Principales
 
-### 1. `rxconfig.py` - Configuración de Reflex
+### 1. `.env` - Variables de Entorno
+
+**Propósito**: Configuración de variables de entorno para diferentes entornos.
+
+**Ubicación**: `./.env` (local) y `/srv/docker/saltoestudia/.env` (VPS)
+
+**Configuración de Desarrollo (Local)**:
+```bash
+# CONFIGURACIÓN DE ENTORNO - SALTO ESTUDIA (DESARROLLO)
+# ========================================
+
+# === BASE DE DATOS SQLITE ===
+DATABASE_URL=sqlite:///data/saltoestudia.db
+REFLEX_DB_URL=sqlite:///reflex.db
+
+# === CONTRASEÑAS INDIVIDUALES DE USUARIOS ADMINISTRADORES ===
+DEFAULT_SEED_PASSWORD=SaltoEstudia2024_Default!
+CENUR_PASSWORD=Cenur_Segura_2024!
+IAE_PASSWORD=IAE_Admin_2024!
+CATALINA_PASSWORD=Catalina_Tech_2024!
+ADMINISTRACION_PASSWORD=Admin_Escuela_2024!
+AGRARIA_PASSWORD=Agraria_Campo_2024!
+```
+
+**Configuración de Producción (VPS)**:
+```bash
+# CONFIGURACIÓN DE ENTORNO - SALTO ESTUDIA (PRODUCCIÓN)
+# ========================================
+
+# === BASE DE DATOS POSTGRESQL ===
+DATABASE_URL=postgresql://saltoestudia:SaltoEstudia2024_Postgres!@postgres:5432/saltoestudia
+REFLEX_DB_URL=postgresql://saltoestudia:SaltoEstudia2024_Postgres!@postgres:5432/saltoestudia
+DB_PASSWORD=SaltoEstudia2024_Postgres!
+
+# === CONTRASEÑAS INDIVIDUALES DE USUARIOS ADMINISTRADORES ===
+DEFAULT_SEED_PASSWORD=SaltoEstudia2024_Default!
+CENUR_PASSWORD=Cenur_Segura_2024!
+IAE_PASSWORD=IAE_Admin_2024!
+CATALINA_PASSWORD=Catalina_Tech_2024!
+ADMINISTRACION_PASSWORD=Admin_Escuela_2024!
+AGRARIA_PASSWORD=Agraria_Campo_2024!
+
+# === CONFIGURACIÓN DE PRODUCCIÓN ===
+REFLEX_ENV=production
+```
+
+**⚠️ IMPORTANTE**: 
+- El archivo `.env` **NO se sube a GitHub** por seguridad
+- Para producción, **SIEMPRE** verificar que el archivo `.env` en el VPS tenga la configuración correcta de PostgreSQL
+- Si PostgreSQL no se inicializa, verificar que `DB_PASSWORD` esté configurado
+
+**Para actualizar .env en producción**:
+```bash
+# Opción 1: Crear archivo local y subirlo
+scp env.production ubuntu@150.230.30.198:/srv/docker/saltoestudia/.env
+
+# Opción 2: Editar directamente en el VPS
+ssh ubuntu@150.230.30.198
+cd /srv/docker/saltoestudia
+nano .env
+```
+
+### 2. `rxconfig.py` - Configuración de Reflex
 
 **Propósito**: Configuración global de la aplicación Reflex.
 

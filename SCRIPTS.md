@@ -227,7 +227,54 @@ Este documento describe todos los scripts de automatización incluidos en el pro
 
 ---
 
-### 7. `scripts/diagnose-problems.sh` - Diagnóstico de Problemas
+### 7. `scripts/verify-env.sh` - Verificación de Variables de Entorno
+
+**Propósito**: Verifica que el archivo `.env` esté configurado correctamente para el entorno especificado.
+
+**Uso**:
+```bash
+./scripts/verify-env.sh [local|production]
+```
+
+**Modos Disponibles**:
+
+#### Modo `local`
+```bash
+./scripts/verify-env.sh local
+```
+- Verifica configuración para desarrollo local
+- Valida URLs de SQLite
+- Comprueba contraseñas de usuarios
+- Ideal para desarrollo
+
+#### Modo `production`
+```bash
+./scripts/verify-env.sh production
+```
+- Verifica configuración para producción
+- Valida URLs de PostgreSQL
+- Comprueba DB_PASSWORD
+- Verifica REFLEX_ENV=production
+
+**Verificaciones Realizadas**:
+- Existencia del archivo `.env`
+- Configuración de base de datos (SQLite/PostgreSQL)
+- Variables de contraseñas de usuarios
+- Configuración de entorno (desarrollo/producción)
+
+**Ejemplo de Salida**:
+```bash
+🔍 Verificando configuración del archivo .env...
+✅ Archivo .env encontrado
+🔧 Verificando configuración LOCAL (SQLite)...
+✅ DATABASE_URL configurado para SQLite
+✅ REFLEX_DB_URL configurado para SQLite
+🔑 Verificando contraseñas de usuarios...
+✅ DEFAULT_SEED_PASSWORD configurado
+✅ CENUR_PASSWORD configurado
+```
+
+### 8. `scripts/diagnose-problems.sh` - Diagnóstico de Problemas
 
 **Propósito**: Diagnostica problemas comunes del sistema.
 
