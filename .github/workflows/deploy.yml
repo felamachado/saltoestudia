@@ -18,6 +18,14 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
         
+    - name: 🔍 Test SSH Connection
+      env:
+        VPS_HOST: ${{ secrets.VPS_HOST }}
+        VPS_USER: ${{ secrets.VPS_USER }}
+      run: |
+        echo "🔍 Probando conectividad SSH..."
+        ssh -o ConnectTimeout=10 $VPS_USER@$VPS_HOST "echo '✅ Conexión SSH exitosa'"
+        
     - name: 🚀 Deploy to VPS
       env:
         VPS_HOST: ${{ secrets.VPS_HOST }}
@@ -32,7 +40,6 @@ jobs:
         cp docker-compose.yml deploy-files/
         cp dockerfile.frontend deploy-files/
         cp dockerfile.backend deploy-files/
-        cp scripts/sync-database.sh deploy-files/
         cp requirements.txt deploy-files/
         cp package.json deploy-files/
         cp -r saltoestudia/ deploy-files/
@@ -68,6 +75,16 @@ jobs:
           echo "📊 Verificando logs del backend..."
           docker compose logs backend --tail=20
           
+          echo "🔍 Verificando que todos los contenedores estén corriendo..."
+          if docker ps | grep -q "saltoestudia-backend" && docker ps | grep -q "saltoestudia-frontend" && docker ps | grep -q "saltoestudia-postgres"; then
+            echo "✅ Todos los contenedores principales están corriendo"
+          else
+            echo "❌ Algún contenedor principal NO está corriendo"
+            echo "📊 Estado actual de contenedores:"
+            docker ps
+            exit 1
+          fi
+          
           echo "✅ Despliegue completado"
         EOF
         
@@ -84,6 +101,13 @@ jobs:
         else
           echo "❌ La aplicación no está respondiendo"
           exit 1
+        fi
+        
+        # Verificar que el WebSocket funciona
+        if curl -f -s -I https://saltoestudia.infra.com.uy/_event | grep -q "307\|101"; then
+          echo "✅ WebSocket está funcionando correctamente"
+        else
+          echo "⚠️ WebSocket puede tener problemas"
         fi
         
     - name: 📧 Notify Success
