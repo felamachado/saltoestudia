@@ -212,3 +212,4 @@ lsof -ti :8000 | xargs -r kill -9
 ## 📄 Licencia
 
 Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
+# Test workflow - jue 17 jul 2025 09:24:23 -03
