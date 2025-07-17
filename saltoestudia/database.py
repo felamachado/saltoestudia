@@ -45,15 +45,24 @@ from .constants import ValidationConstants
 # Configuración inteligente que funciona en Docker y local
 def get_database_url():
     """Obtiene la URL de la base de datos de forma inteligente."""
-    # Si hay una variable de entorno, usarla
+    # Si hay una variable de entorno específica, usarla
     if os.getenv("DATABASE_URL"):
         return os.getenv("DATABASE_URL")
     
-    # Si estamos en Docker (verificar si existe /app/data)
+    # Si estamos en Docker con PostgreSQL habilitado
+    if os.getenv("USE_POSTGRES", "false").lower() == "true":
+        db_user = os.getenv("DB_USER", "saltoestudia")
+        db_password = os.getenv("DB_PASSWORD", "dev_password")
+        db_host = os.getenv("DB_HOST", "postgres")
+        db_port = os.getenv("DB_PORT", "5432")
+        db_name = os.getenv("DB_NAME", "saltoestudia")
+        
+        return f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+    
+    # Fallback a SQLite (desarrollo local sin Docker)
     if os.path.exists("/app/data"):
         return "sqlite:///app/data/saltoestudia.db"
     
-    # Si estamos en local (usar ruta relativa desde el directorio actual)
     return "sqlite:///data/saltoestudia.db"
 
 DATABASE_URL = get_database_url()

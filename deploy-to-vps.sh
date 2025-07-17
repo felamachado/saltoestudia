@@ -75,6 +75,10 @@ ssh -i $SSH_KEY $VPS_HOST "cd $VPS_PATH && [ -f docker-compose.yml ] && cp docke
 echo "📂 Copiando código fuente..."
 rsync -av -e "ssh -i $SSH_KEY -o StrictHostKeyChecking=no" --exclude '.git' --exclude 'node_modules' --exclude '.web' --exclude '*.pyc' --exclude '.github' . $VPS_HOST:$VPS_PATH/
 
+# Asegurar que el script de sincronización tenga permisos
+echo "🔧 Configurando permisos del script de sincronización..."
+ssh -i $SSH_KEY $VPS_HOST "cd $VPS_PATH && chmod +x scripts/sync-database.sh"
+
 # Copiar archivos de producción específicos
 echo "⚙️ Copiando configuración de producción..."
 scp -i $SSH_KEY dockerfile.production $VPS_HOST:$VPS_PATH/dockerfile
