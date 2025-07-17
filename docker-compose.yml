@@ -1,11 +1,30 @@
 version: '3.8'
 
 services:
-  saltoestudia:
+  frontend:
     build:
       context: .
-      dockerfile: dockerfile.production
-    container_name: saltoestudia-app
+      dockerfile: dockerfile.frontend
+    container_name: saltoestudia-frontend
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./data:/app/data:ro
+    networks:
+      - traefik-net
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.saltoestudia-frontend.rule=Host(`saltoestudia.infra.com.uy`) && !PathPrefix(`/_event`)'
+      - 'traefik.http.routers.saltoestudia-frontend.entrypoints=websecure'
+      - 'traefik.http.routers.saltoestudia-frontend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.saltoestudia-frontend.loadbalancer.server.port=3000'
+      - 'traefik.docker.network=traefik-net'
+
+  backend:
+    build:
+      context: .
+      dockerfile: dockerfile.backend
+    container_name: saltoestudia-backend
     restart: unless-stopped
     env_file: .env
     environment:
@@ -23,25 +42,40 @@ services:
       - ./logs:/app/logs:rw
     networks:
       - traefik-net
+    depends_on:
+      postgres:
+        condition: service_healthy
     labels:
       - 'traefik.enable=true'
-      
-      # Frontend service (puerto 3000) - TODAS las páginas HTML
-      - 'traefik.http.routers.saltoestudia-frontend.rule=Host(`saltoestudia.infra.com.uy`) && !PathPrefix(`/_event`)'
-      - 'traefik.http.routers.saltoestudia-frontend.entrypoints=websecure'
-      - 'traefik.http.routers.saltoestudia-frontend.service=saltoestudia-frontend'
-      - 'traefik.http.routers.saltoestudia-frontend.tls.certresolver=letsencrypt'
-      - 'traefik.http.services.saltoestudia-frontend.loadbalancer.server.port=3000'
-      
-      # Backend service (puerto 8000) - Solo WebSocket y APIs
       - 'traefik.http.routers.saltoestudia-backend.rule=Host(`saltoestudia.infra.com.uy`) && PathPrefix(`/_event`)'
       - 'traefik.http.routers.saltoestudia-backend.entrypoints=websecure'
-      - 'traefik.http.routers.saltoestudia-backend.service=saltoestudia-backend'
       - 'traefik.http.routers.saltoestudia-backend.tls.certresolver=letsencrypt'
       - 'traefik.http.services.saltoestudia-backend.loadbalancer.server.port=8000'
-      
       - 'traefik.docker.network=traefik-net'
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: saltoestudia-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: saltoestudia
+      POSTGRES_USER: saltoestudia
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    networks:
+      - traefik-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U saltoestudia"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 networks:
   traefik-net:
-    external: true 
+    external: true
+
+volumes:
+  postgres_data:
+    driver: local 

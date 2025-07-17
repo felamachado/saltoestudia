@@ -1,0 +1,30 @@
+FROM python:3.11-slim-bookworm
+
+WORKDIR /app
+
+# Instalar Node.js y unzip
+RUN apt-get update && apt-get install -y \
+    curl \
+    unzip \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copiar archivos del proyecto
+COPY . .
+
+# Instalar dependencias de Python
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Instalar dependencias de Node.js
+RUN npm install --legacy-peer-deps
+
+# Exportar frontend estático
+RUN reflex export --frontend-only
+
+# Exponer puerto 3000
+EXPOSE 3000
+
+# Comando para servir archivos estáticos
+CMD ["sh", "-c", "cd .web/build/client && python -m http.server 3000"] 

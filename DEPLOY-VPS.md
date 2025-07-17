@@ -24,7 +24,9 @@ saltoestudia/
 
 | Aspecto | Local | Producción |
 |---------|-------|------------|
-| **Dockerfile** | `reflex run` simple | `reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000` |
+| **Arquitectura** | 1 contenedor (`reflex run`) | 2 contenedores (frontend + backend) |
+| **Dockerfile** | `reflex run` simple | `reflex export` + `http.server` (frontend) / `reflex run --backend-only` (backend) |
+| **Base de datos** | `data/saltoestudia.db` | `reflex.db` (sincronizada automáticamente) |
 | **Proxy** | Sin proxy | Traefik con rutas separadas |
 | **SSL** | HTTP (`ws://`) | HTTPS (`wss://`) |
 | **Puertos** | Directo 3000/8000 | Via Traefik 443 |
@@ -83,12 +85,20 @@ docker restart traefik
 
 ### **Labels de Traefik:**
 ```yaml
-# Frontend
-traefik.http.routers.saltoestudia-frontend.rule=Host(`saltoestudia.infra.com.uy`) && (PathPrefix(`/_next`) || PathPrefix(`/favicon`) || PathPrefix(`/logo`) || Path(`/`))
+# Frontend (archivos estáticos)
+traefik.http.routers.saltoestudia-frontend.rule=Host(`saltoestudia.infra.com.uy`) && !PathPrefix(`/_event`)
 
-# Backend  
-traefik.http.routers.saltoestudia-backend.rule=Host(`saltoestudia.infra.com.uy`) && !PathPrefix(`/_next`) && !PathPrefix(`/favicon`) && !PathPrefix(`/logo`) && !Path(`/`)
+# Backend (WebSocket y APIs)
+traefik.http.routers.saltoestudia-backend.rule=Host(`saltoestudia.infra.com.uy`) && PathPrefix(`/_event`)
 ```
+
+### **Sincronización Automática de Base de Datos:**
+El script `scripts/sync-database.sh` se ejecuta automáticamente al iniciar el backend y:
+- ✅ Detecta si `reflex.db` está vacía
+- ✅ Copia datos desde `data/saltoestudia.db` si es necesario
+- ✅ Ejecuta migraciones si faltan
+- ✅ Ejecuta seed si no hay datos
+- ✅ Verifica que todo esté funcionando
 
 ---
 

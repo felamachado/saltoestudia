@@ -4,7 +4,50 @@ Este documento registra todos los errores encontrados durante el desarrollo y su
 
 ## 🚨 Errores Críticos y Soluciones
 
-### 1. **Error: "unable to open database file"**
+### 1. **Error: Base de datos diferente en desarrollo vs producción**
+
+**Síntomas:**
+- ✅ **Desarrollo:** Los datos se ven correctamente (cursos, instituciones)
+- ❌ **Producción:** La web carga pero no muestra datos de la base de datos
+- ❌ **Error en logs:** `no such table: sedes` o tablas vacías
+
+**Causa:** Reflex usa diferentes archivos de base de datos según el entorno:
+- **Desarrollo:** `data/saltoestudia.db` (con datos del seed)
+- **Producción:** `reflex.db` (ubicación por defecto, sin datos)
+
+**Solución Definitiva:**
+- ✅ **Configuración unificada en `saltoestudia/database.py`**
+- ✅ **Script de despliegue que sincroniza las bases de datos**
+- ✅ **GitHub Actions que maneja la migración automáticamente**
+
+**Código de la solución:**
+```python
+def get_database_url():
+    """Obtiene la URL de la base de datos de forma inteligente."""
+    # Si hay una variable de entorno, usarla
+    if os.getenv("DATABASE_URL"):
+        return os.getenv("DATABASE_URL")
+    
+    # Si estamos en Docker (verificar si existe /app/data)
+    if os.path.exists("/app/data"):
+        return "sqlite:///app/data/saltoestudia.db"
+    
+    # Si estamos en local (usar ruta relativa desde el directorio actual)
+    return "sqlite:///data/saltoestudia.db"
+```
+
+**Script de sincronización automática:**
+```bash
+#!/bin/bash
+# Sincronizar base de datos en producción
+if [ -f "data/saltoestudia.db" ] && [ ! -f "reflex.db" ]; then
+    echo "🔄 Sincronizando base de datos..."
+    cp data/saltoestudia.db reflex.db
+    echo "✅ Base de datos sincronizada"
+fi
+```
+
+### 2. **Error: "unable to open database file"**
 
 **Síntomas:**
 ```

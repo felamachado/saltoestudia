@@ -1,49 +1,102 @@
-name: 🚀 Deploy to VPS
+name: 🚀 Deploy to Production
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch: # Permite ejecutar manualmente
+  workflow_dispatch:
 
 jobs:
   deploy:
-    name: 🐳 Deploy Salto Estudia
     runs-on: ubuntu-latest
     
     steps:
     - name: 📥 Checkout code
       uses: actions/checkout@v4
       
-    - name: 🔑 Setup SSH Key
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/github_actions_deploy_v2
-        chmod 600 ~/.ssh/github_actions_deploy_v2
-        ssh-keyscan -H ${{ secrets.VPS_HOST_IP }} >> ~/.ssh/known_hosts
-        
-    - name: 📁 Create .env file
-      run: |
-        echo "${{ secrets.ENV_FILE }}" > .env
+    - name: 🔑 Setup SSH
+      uses: webfactory/ssh-agent@v0.8.0
+      with:
+        ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
         
     - name: 🚀 Deploy to VPS
       env:
         VPS_HOST: ${{ secrets.VPS_HOST }}
-        VPS_HOST_IP: ${{ secrets.VPS_HOST_IP }}
+        VPS_USER: ${{ secrets.VPS_USER }}
       run: |
-        # Hacer el script ejecutable
-        chmod +x deploy-to-vps.sh
+        echo "🚀 Iniciando despliegue en producción..."
         
-        # Ejecutar deployment
-        ./deploy-to-vps.sh
+        # Crear directorio temporal para archivos
+        mkdir -p deploy-files
         
-    - name: ✅ Deployment Status
+        # Copiar archivos necesarios
+        cp docker-compose.yml deploy-files/
+        cp dockerfile.frontend deploy-files/
+        cp dockerfile.backend deploy-files/
+        cp scripts/sync-database.sh deploy-files/
+        cp requirements.txt deploy-files/
+        cp package.json deploy-files/
+        cp -r saltoestudia/ deploy-files/
+        cp -r alembic/ deploy-files/
+        cp alembic.ini deploy-files/
+        cp seed.py deploy-files/
+        cp rxconfig.py deploy-files/
+        
+        # Subir archivos al VPS
+        echo "📤 Subiendo archivos al VPS..."
+        scp -r deploy-files/* $VPS_USER@$VPS_HOST:/srv/docker/saltoestudia/
+        
+        # Ejecutar despliegue en el VPS
+        echo "🔧 Ejecutando despliegue..."
+        ssh $VPS_USER@$VPS_HOST << 'EOF'
+          cd /srv/docker/saltoestudia
+          
+          echo "🔄 Deteniendo contenedores actuales..."
+          docker compose down
+          
+          echo "🏗️ Reconstruyendo contenedores..."
+          docker compose build --no-cache
+          
+          echo "🚀 Levantando servicios..."
+          docker compose up -d
+          
+          echo "⏳ Esperando que los servicios estén listos..."
+          sleep 30
+          
+          echo "🔍 Verificando estado de los servicios..."
+          docker compose ps
+          
+          echo "📊 Verificando logs del backend..."
+          docker compose logs backend --tail=20
+          
+          echo "✅ Despliegue completado"
+        EOF
+        
+        echo "🎉 Despliegue exitoso en https://saltoestudia.infra.com.uy"
+        
+    - name: 🔍 Health Check
+      run: |
+        echo "🔍 Verificando que la aplicación esté funcionando..."
+        sleep 60  # Esperar a que todo esté listo
+        
+        # Verificar que la web responde
+        if curl -f -s https://saltoestudia.infra.com.uy > /dev/null; then
+          echo "✅ La aplicación está respondiendo correctamente"
+        else
+          echo "❌ La aplicación no está respondiendo"
+          exit 1
+        fi
+        
+    - name: 📧 Notify Success
       if: success()
       run: |
-        echo "🎉 ¡Deployment exitoso!"
-        echo "✅ Aplicación disponible en: https://saltoestudia.infra.com.uy"
+        echo "🎉 Despliegue exitoso en https://saltoestudia.infra.com.uy"
+        echo "📅 Fecha: $(date)"
+        echo "🔗 Commit: ${{ github.sha }}"
         
-    - name: ❌ Deployment Failed
+    - name: 📧 Notify Failure
       if: failure()
       run: |
-        echo "💥 Deployment falló. Revisa los logs arriba."
-        exit 1 
+        echo "❌ Despliegue falló"
+        echo "📅 Fecha: $(date)"
+        echo "🔗 Commit: ${{ github.sha }}"
+        echo "📋 Revisar logs para más detalles" 
