@@ -529,22 +529,19 @@ def admin_instituciones_content_mobile() -> rx.Component:
 )
 def admin_instituciones_page() -> rx.Component:
     """Página de administración de información de la institución."""
-    # Verificar autenticación
-    if not State.is_authenticated():
-        return rx.redirect("/login")
-    
-    # Verificar acceso administrativo
-    if not State.logged_in_user:
-        return rx.redirect("/login")
-    
     return rx.cond(
-        State.is_mobile,
-        admin_instituciones_layout_mobile(
-            admin_instituciones_content_mobile(),
-            institucion_form_dialog(),
+        # Verificar autenticación y acceso administrativo
+        State.is_authenticated() & (State.logged_in_user != None),
+        rx.cond(
+            State.is_mobile,
+            admin_instituciones_layout_mobile(
+                admin_instituciones_content_mobile(),
+                institucion_form_dialog(),
+            ),
+            admin_instituciones_layout_desktop(
+                admin_instituciones_content_desktop(),
+                institucion_form_dialog(),
+            ),
         ),
-        admin_instituciones_layout_desktop(
-            admin_instituciones_content_desktop(),
-            institucion_form_dialog(),
-        ),
+        rx.redirect("/login")
     ) 
