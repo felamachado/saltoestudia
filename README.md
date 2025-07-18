@@ -10,6 +10,13 @@ Plataforma educativa para la gestión de cursos e instituciones educativas en Sa
 
 ### 🎯 Logros Recientes
 
+**✅ Administración de Información de Institución** (18 Enero, 2025)
+- Nueva página de administración para editar información de la institución
+- Capacidad de cambiar el nombre y logo de la institución
+- Vista previa del logo actual en el formulario
+- Integración completa con el sistema de autenticación
+- Ver detalles en [`cambios/2025-01-18_admin-instituciones.md`](cambios/2025-01-18_admin-instituciones.md)
+
 **✅ Selección Múltiple de Ciudades Implementada** (18 Julio, 2025)
 - Funcionalidad completa de selección múltiple de ciudades en cursos
 - Preselección de ciudades asociadas al editar cursos
@@ -55,6 +62,9 @@ Una vez iniciada, la aplicación estará disponible en:
 - **📖 Cursos**: Buscador de cursos con filtros avanzados
 - **🏢 Instituciones**: Galería de instituciones educativas
 - **🔐 Admin**: Panel de administración (requiere login)
+  - **Gestión de Cursos**: Agregar, editar y eliminar cursos
+  - **Gestión de Sedes**: Administrar sedes de la institución
+  - **Información de Institución**: Editar nombre y logo de la institución
 
 ## 📖 Documentación
 

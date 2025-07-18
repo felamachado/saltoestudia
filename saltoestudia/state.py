@@ -216,6 +216,17 @@ class State(rx.State):
     form_sede_web: str = ""                              # Campo sitio web de la sede
     form_sede_ciudad: str = ""                           # Campo ciudad de la sede
 
+    # === CAMPOS DEL FORMULARIO INSTITUCIÓN ===
+    # Campos para editar información de la institución
+    form_institucion_nombre: str = ""                    # Campo nombre de la institución
+    form_institucion_logo: str = ""                      # Campo logo de la institución
+    
+    # === DATOS DE LA INSTITUCIÓN ACTUAL ===
+    institucion_actual: Dict[str, Any] = {}              # Datos de la institución del usuario logueado
+    
+    # === UI CONTROL - FORMULARIO INSTITUCIÓN ===
+    show_institucion_dialog: bool = False                # Control modal formulario institución
+
     # === OPCIONES PARA DROPDOWNS ===
     # Estas opciones se cargan desde constants.py y se usan en formularios
     opciones_nivel: List[str] = CursosConstants.NIVELES                    # ["Bachillerato", "Terciario", ...]
@@ -1058,3 +1069,80 @@ class State(rx.State):
         
     def set_form_sede_ciudad(self, value: str):
         self.form_sede_ciudad = value
+
+    # ================================================================================
+    # FUNCIONES DE GESTIÓN DE INSTITUCIÓN
+    # ================================================================================
+
+    def cargar_institucion_actual(self):
+        """Carga los datos de la institución del usuario logueado."""
+        if self.logged_in_user:
+            from .database import obtener_institucion_por_id
+            self.institucion_actual = obtener_institucion_por_id(self.logged_in_user.institucion_id)
+            # También cargar ciudades para el formulario de sedes
+            self.cargar_ciudades_nombres()
+        else:
+            self.institucion_actual = {}
+
+    def _reset_institucion_form_fields(self):
+        """Limpia los campos del formulario de institución."""
+        self.form_institucion_nombre = ""
+        self.form_institucion_logo = ""
+        self.institucion_actual = {}
+
+    def abrir_dialogo_editar_institucion(self):
+        """Abre el diálogo para editar la información de la institución."""
+        if self.institucion_actual:
+            # Precargar formulario con datos actuales
+            self.form_institucion_nombre = self.institucion_actual.get("nombre", "")
+            self.form_institucion_logo = self.institucion_actual.get("logo", "")
+            self.show_institucion_dialog = True
+        else:
+            print("Error: No hay datos de institución cargados")
+
+    def cerrar_dialogo_institucion(self):
+        """Cierra el diálogo del formulario de institución y resetea los campos."""
+        self.show_institucion_dialog = False
+        self._reset_institucion_form_fields()
+
+    def guardar_institucion(self):
+        """Guarda los cambios en la información de la institución."""
+        if not self.logged_in_user:
+            return rx.window_alert("Error: No hay usuario autenticado.")
+
+        # Validar campos obligatorios
+        if not self.form_institucion_nombre.strip():
+            return rx.window_alert("Error: El nombre de la institución es obligatorio.")
+
+        # Construir el diccionario de datos de la institución
+        institucion_data = {
+            "nombre": self.form_institucion_nombre.strip(),
+            "logo": self.form_institucion_logo.strip() if self.form_institucion_logo.strip() else None,
+        }
+
+        try:
+            # Modificar institución existente
+            institucion_id = self.logged_in_user.institucion_id
+            from .database import modificar_institucion
+            modificar_institucion(institucion_id, institucion_data)
+            print(f"Institución modificada con ID: {institucion_id}")
+            
+            # Recargar datos de la institución y cerrar el diálogo
+            self.cargar_institucion_actual()
+            self.cerrar_dialogo_institucion()
+            
+            # Mostrar mensaje de éxito
+            return rx.window_alert("Información de la institución actualizada correctamente.")
+
+        except Exception as e:
+            print(f"Error al guardar la institución: {e}")
+            return rx.window_alert(f"No se pudo guardar la información: {e}")
+
+    # Setters para los campos del formulario de institución
+    def set_form_institucion_nombre(self, value: str):
+        """Setter para el campo nombre de la institución."""
+        self.form_institucion_nombre = value
+        
+    def set_form_institucion_logo(self, value: str):
+        """Setter para el campo logo de la institución."""
+        self.form_institucion_logo = value

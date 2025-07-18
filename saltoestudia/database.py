@@ -1290,3 +1290,80 @@ def eliminar_sede(sede_id: int):
     except Exception as e:
         print(f"[ERROR] Error al eliminar sede {sede_id}: {e}")
         raise
+
+# ================================================================================
+# FUNCIONES DE GESTIÓN DE INSTITUCIONES
+# ================================================================================
+
+def obtener_institucion_por_id(institucion_id: int) -> Dict[str, Any]:
+    """
+    Obtiene los datos de una institución específica por su ID.
+    
+    Args:
+        institucion_id: ID de la institución
+    
+    Returns:
+        Dict: Datos de la institución o diccionario vacío si no se encuentra
+    
+    Estructura de retorno:
+        {
+            "id": 1,
+            "nombre": "UDELAR – CENUR LN",
+            "logo": "/logos/logo-cenur.png"
+        }
+    """
+    try:
+        with Session(engine) as session:
+            # Buscar la institución por ID
+            institucion = session.exec(select(Institucion).where(Institucion.id == institucion_id)).first()
+            if not institucion:
+                print(f"[LOG] No se encontró la institución con ID {institucion_id}")
+                return {}
+            
+            # Construir respuesta
+            return {
+                "id": institucion.id,
+                "nombre": institucion.nombre,
+                "logo": institucion.logo or "/logos/logoutu.png",
+            }
+            
+    except Exception as e:
+        print(f"[ERROR] Error al obtener institución por ID: {e}")
+        return {}
+
+def modificar_institucion(institucion_id: int, datos_institucion: dict):
+    """
+    Modifica los datos de una institución específica.
+    
+    Args:
+        institucion_id: ID de la institución a modificar
+        datos_institucion: Diccionario con los datos a actualizar
+    
+    Raises:
+        Exception: Si hay un error al modificar la institución
+    
+    Campos modificables:
+        - nombre: Nombre de la institución
+        - logo: Ruta al archivo de logo
+    """
+    try:
+        with Session(engine) as session:
+            # Buscar la institución por ID
+            institucion = session.exec(select(Institucion).where(Institucion.id == institucion_id)).first()
+            if not institucion:
+                raise ValueError(f"No se encontró la institución con ID {institucion_id}")
+            
+            # Actualizar campos
+            if "nombre" in datos_institucion:
+                institucion.nombre = datos_institucion["nombre"]
+            
+            if "logo" in datos_institucion:
+                institucion.logo = datos_institucion["logo"]
+            
+            # Guardar cambios
+            session.commit()
+            print(f"[LOG] Institución modificada exitosamente: {institucion_id}")
+            
+    except Exception as e:
+        print(f"[ERROR] Error al modificar institución {institucion_id}: {e}")
+        raise
