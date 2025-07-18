@@ -530,13 +530,46 @@ def admin_instituciones_content_mobile() -> rx.Component:
 def admin_instituciones_page() -> rx.Component:
     """Página de administración de información de la institución."""
     return rx.cond(
-        State.is_mobile,
-        admin_instituciones_layout_mobile(
-            admin_instituciones_content_mobile(),
-            institucion_form_dialog(),
+        State.logged_in_user,
+        # Usuario autenticado - mostrar contenido admin responsive
+        rx.box(
+            rx.desktop_only(
+                admin_instituciones_layout_desktop(
+                    admin_instituciones_content_desktop(),
+                    institucion_form_dialog(),
+                )
+            ),
+            rx.mobile_and_tablet(
+                admin_instituciones_layout_mobile(
+                    admin_instituciones_content_mobile(),
+                    institucion_form_dialog(),
+                )
+            ),
+            width="100%",
+            min_height="100vh",
+            bg=theme.Color.GRAY_100,
         ),
-        admin_instituciones_layout_desktop(
-            admin_instituciones_content_desktop(),
-            institucion_form_dialog(),
-        ),
+        # Usuario no autenticado - redirigir al login
+        rx.vstack(
+            rx.script(
+                """
+                // Redirigir inmediatamente al login
+                window.location.href = '/login';
+                """,
+            ),
+            rx.box(
+                rx.text(
+                    "Redirigiendo al login...",
+                    color=theme.Color.GRAY_700,
+                    font_family=theme.Typography.FONT_FAMILY,
+                    text_align="center",
+                ),
+                padding="2em",
+            ),
+            min_height="100vh",
+            width="100%",
+            justify_content="center",
+            align_items="center",
+            bg=theme.Color.GRAY_100,
+        )
     ) 
