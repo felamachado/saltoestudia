@@ -37,6 +37,7 @@ from .pages.cursos import cursos            # Buscador de cursos con filtros
 from .pages.info import info                # Información adicional del proyecto
 from .pages.admin import admin_page         # Panel de administración (requiere login)
 from .pages.admin_sedes import admin_sedes_page  # Gestión de sedes (requiere login)
+from .pages.admin_instituciones import admin_instituciones_page  # Gestión de información de institución (requiere login)
 from .pages.login import login_page         # Página de inicio de sesión
 
 # === IMPORTACIONES DE MODELOS ===
@@ -64,6 +65,7 @@ app = rx.App(
 # - /info → información del proyecto
 # - /admin → panel administrativo (protegido)
 # - /admin/sedes → gestión de sedes (protegido)
+# - /admin/instituciones → gestión de información de institución (protegido)
 # - /login → formulario de inicio de sesión
 #
 # FLUJO DE NAVEGACIÓN:
