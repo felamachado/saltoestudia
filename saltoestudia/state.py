@@ -660,7 +660,6 @@ class State(rx.State):
         self.form_duracion_numero = ""
         self.form_duracion_unidad = ""
         self.form_requisitos_ingreso = ""
-        self.form_lugar = ""
         self.form_informacion = ""
         self.form_ciudades = [] # Limpiar ciudades
         self.form_ciudades_opciones = [] # Limpiar ciudades válidas
@@ -681,22 +680,13 @@ class State(rx.State):
     
     def is_authenticated(self) -> bool:
         """Verifica si el usuario está autenticado."""
-        result = self.logged_in_user is not None and self.user_authenticated
-        print(f"[DEBUG] is_authenticated: logged_in_user={self.logged_in_user}, user_authenticated={self.user_authenticated}, result={result}")
-        return result
+        return self.logged_in_user is not None and self.user_authenticated
 
     def require_admin_access(self):
         """Guard para rutas admin - redirige a login si no está autenticado."""
-        print(f"[DEBUG] require_admin_access called. is_authenticated: {self.is_authenticated()}")
-        print(f"[DEBUG] logged_in_user: {self.logged_in_user}")
-        print(f"[DEBUG] user_authenticated: {self.user_authenticated}")
-        
         if not self.is_authenticated():
             self.set_redirect_url("/admin")
-            print("[DEBUG] Redirecting to /login")
             return rx.redirect("/login")
-        
-        print("[DEBUG] User is authenticated, allowing access")
         return None
 
     def check_admin_route_access(self, path: str = "/admin"):
@@ -728,12 +718,17 @@ class State(rx.State):
         self.form_informacion = value
 
     def set_form_ciudades(self, value):
-        # value puede venir como lista o string (de un select múltiple)
+        """Maneja la selección múltiple de ciudades desde el select."""
         if isinstance(value, str):
-            # Reflex puede enviar un string separado por comas
-            self.form_ciudades = value.split(",") if value else []
+            # Si viene como string separado por comas
+            self.form_ciudades = [v.strip() for v in value.split(",") if v.strip()]
+        elif isinstance(value, list):
+            # Si viene como lista
+            self.form_ciudades = value
         else:
-            self.form_ciudades = value or []
+            # Fallback
+            self.form_ciudades = []
+        print(f"[DEBUG] set_form_ciudades: {value} -> {self.form_ciudades}")
 
     def toggle_ciudad(self, ciudad: str, checked: bool):
         if checked:
@@ -742,22 +737,61 @@ class State(rx.State):
         else:
             self.form_ciudades = [c for c in self.form_ciudades if c != ciudad]
 
+    def toggle_ciudad_simple(self, ciudad: str):
+        """Función simple para toggle de ciudad sin parámetros adicionales."""
+        if ciudad in self.form_ciudades:
+            # Si está seleccionada, la quitamos
+            self.form_ciudades = [c for c in self.form_ciudades if c != ciudad]
+        else:
+            # Si no está seleccionada, la agregamos
+            self.form_ciudades = self.form_ciudades + [ciudad]
+
+    def ciudad_esta_seleccionada(self, ciudad: str) -> bool:
+        """Verifica si una ciudad está seleccionada en el formulario."""
+        return ciudad in self.form_ciudades
+    
+    def get_ciudad_button_style(self, ciudad: str) -> dict:
+        """Retorna el estilo del botón según si la ciudad está seleccionada."""
+        is_selected = ciudad in self.form_ciudades
+        return {
+            "bg": "#3b82f6" if is_selected else "#e5e7eb",
+            "color": "white" if is_selected else "#374151",
+            "_hover": {
+                "bg": "#2563eb" if is_selected else "#d1d5db"
+            }
+        }
+
+    def _cargar_ciudades_disponibles_institucion(self) -> List[str]:
+        """Carga todas las ciudades disponibles en el sistema, incluyendo Virtual."""
+        try:
+            from .database import obtener_ciudades_nombres
+            # Obtener todas las ciudades del sistema
+            ciudades = obtener_ciudades_nombres()
+            
+            # Agregar "Virtual" como opción siempre disponible
+            if "Virtual" not in ciudades:
+                ciudades.append("Virtual")
+            
+            # Ordenar alfabéticamente para mejor UX
+            ciudades.sort()
+            
+            return ciudades
+        except Exception as e:
+            print(f"[ERROR] Error al cargar ciudades disponibles: {e}")
+            # Fallback: devolver ciudades básicas + Virtual
+            return ["Artigas", "Montevideo", "Paysandú", "Río Negro", "Salto", "Virtual"]
+
+
+
     def set_curso_a_editar_field(self, field: str, value: Any):
         """Actualiza un campo del diccionario del curso a editar."""
         self.curso_a_editar[field] = value
 
     def cargar_cursos_admin(self):
         """Carga los cursos para el administrador logueado."""
-        print(f"[DEBUG] cargar_cursos_admin llamado")
-        print(f"[DEBUG] logged_in_user: {self.logged_in_user}")
         if self.logged_in_user:
-            print(f"[DEBUG] Institución ID: {self.logged_in_user.institucion_id}")
             self.admin_cursos = obtener_cursos_por_institucion(self.logged_in_user.institucion_id)
-            print(f"[DEBUG] Cursos cargados: {len(self.admin_cursos)}")
-            for curso in self.admin_cursos:
-                print(f"[DEBUG] Curso: {curso['nombre']}")
         else:
-            print(f"[DEBUG] No hay usuario logueado")
             self.admin_cursos = []
 
     def _reset_form_fields(self):
@@ -767,7 +801,6 @@ class State(rx.State):
         self.form_duracion_numero = ""
         self.form_duracion_unidad = ""
         self.form_requisitos_ingreso = ""
-        self.form_lugar = ""
         self.form_informacion = ""
         self.form_ciudades = []
         self.form_ciudades_opciones = []
@@ -778,13 +811,7 @@ class State(rx.State):
         self._reset_form_fields()
         self.form_ciudades = []
         # Cargar ciudades válidas para la institución
-        self.form_ciudades_opciones = []
-        if self.logged_in_user:
-            # Buscar la institución y sus sedes
-            for inst in self.instituciones_info:
-                if inst["id"] == self.logged_in_user.institucion_id:
-                    self.form_ciudades_opciones = [sede["ciudad"] for sede in inst.get("sedes", [])]
-                    break
+        self.form_ciudades_opciones = self._cargar_ciudades_disponibles_institucion()
         self.show_curso_dialog = True
 
     def abrir_dialogo_editar(self, curso: dict):
@@ -796,18 +823,20 @@ class State(rx.State):
         self.form_duracion_numero = str(curso.get("duracion_numero", ""))
         self.form_duracion_unidad = curso.get("duracion_unidad", "")
         self.form_requisitos_ingreso = curso.get("requisitos_ingreso", "")
-        self.form_lugar = curso.get("lugar", "")
         self.form_informacion = curso.get("informacion", "")
-        # Precargar ciudades (parsear string separado por coma a lista)
-        lugar_str = curso.get("lugar", "")
-        self.form_ciudades = [c.strip() for c in lugar_str.split(",") if c.strip()] if lugar_str else []
+        
+        # Precargar ciudades desde la base de datos (relación many-to-many)
+        curso_id = curso.get("id")
+        if curso_id:
+            from .database import obtener_ciudades_por_curso
+            self.form_ciudades = obtener_ciudades_por_curso(curso_id)
+            print(f"[DEBUG] Ciudades pre-cargadas para curso {curso_id}: {self.form_ciudades}")
+        else:
+            self.form_ciudades = []
+            print("[DEBUG] No se encontró ID del curso, ciudades vacías")
+        
         # Cargar ciudades válidas para la institución
-        self.form_ciudades_opciones = []
-        if self.logged_in_user:
-            for inst in self.instituciones_info:
-                if inst["id"] == self.logged_in_user.institucion_id:
-                    self.form_ciudades_opciones = [sede["ciudad"] for sede in inst.get("sedes", [])]
-                    break
+        self.form_ciudades_opciones = self._cargar_ciudades_disponibles_institucion()
         self.show_curso_dialog = True
 
     def cerrar_dialogo(self):
@@ -828,10 +857,9 @@ class State(rx.State):
             "duracion_numero": self.form_duracion_numero,
             "duracion_unidad": self.form_duracion_unidad,
             "requisitos_ingreso": self.form_requisitos_ingreso,
-            "lugar": self.form_lugar,
             "informacion": self.form_informacion,
             "institucion_id": self.logged_in_user.institucion_id,
-            # NUEVO: enviar ciudades seleccionadas
+            # Enviar ciudades seleccionadas para la relación many-to-many
             "ciudades": self.form_ciudades,
         }
 
@@ -895,12 +923,10 @@ class State(rx.State):
     # Funciones para manejar eventos de AG Grid
     def handle_ag_grid_edit(self, curso_data: dict):
         """Maneja el evento de edición desde AG Grid."""
-        print(f"[DEBUG] AG Grid Edit evento: {curso_data}")
         self.abrir_dialogo_editar(curso_data)
 
     def handle_ag_grid_delete(self, curso_id: int):
         """Maneja el evento de eliminación desde AG Grid."""
-        print(f"[DEBUG] AG Grid Delete evento: {curso_id}")
         self.abrir_alerta_eliminar(curso_id)
 
     def on_ag_grid_event(self, event_data: dict):
@@ -921,17 +947,10 @@ class State(rx.State):
 
     def cargar_sedes_admin(self):
         """Carga las sedes para el administrador logueado."""
-        print(f"[DEBUG] cargar_sedes_admin llamado")
-        print(f"[DEBUG] logged_in_user: {self.logged_in_user}")
         if self.logged_in_user:
-            print(f"[DEBUG] Institución ID: {self.logged_in_user.institucion_id}")
             from .database import obtener_sedes_fisicas_por_institucion
             self.admin_sedes = obtener_sedes_fisicas_por_institucion(self.logged_in_user.institucion_id)
-            print(f"[DEBUG] Sedes cargadas: {len(self.admin_sedes)}")
-            for sede in self.admin_sedes:
-                print(f"[DEBUG] Sede: {sede['nombre']}")
         else:
-            print(f"[DEBUG] No hay usuario logueado")
             self.admin_sedes = []
 
     def _reset_sede_form_fields(self):

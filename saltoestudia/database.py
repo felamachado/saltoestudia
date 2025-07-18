@@ -455,7 +455,7 @@ def obtener_cursos_por_institucion(institucion_id: int) -> List[Dict[str, Any]]:
                     "institucion": institucion.nombre,  # Ya verificamos que existe
                 })
             
-            print(f"[LOG] Cursos obtenidos para institución {institucion.nombre} (ID: {institucion_id}): {len(cursos_list)}")
+
             return cursos_list
     except Exception as e:
         print(f"[ERROR] Error al obtener cursos por institución: {e}")
@@ -537,6 +537,36 @@ def obtener_ciudades_nombres() -> List[str]:
             return [r for r in results]  # Conversión a lista simple
     except Exception as e:
         print(f"[ERROR] Error al obtener nombres de ciudades: {e}")
+        return []  # Retorno seguro
+
+def obtener_ciudades_por_curso(curso_id: int) -> List[str]:
+    """
+    Obtiene las ciudades asociadas a un curso específico.
+    
+    Args:
+        curso_id: ID del curso
+    
+    Returns:
+        List[str]: Lista de nombres de ciudades asociadas al curso
+                  Ejemplo: ["Salto", "Virtual"]
+    
+    Utilizado en:
+        - state.py: _cargar_ciudades_curso() para precargar ciudades en edición
+        - Formularios de edición de cursos
+    """
+    try:
+        with Session(engine) as session:
+            # Query para obtener ciudades a través de la relación many-to-many
+            query = select(Ciudad.nombre).join(
+                CursoCiudadLink, Ciudad.id == CursoCiudadLink.ciudad_id
+            ).where(CursoCiudadLink.curso_id == curso_id)
+            
+            results = session.exec(query).all()
+            ciudades = [str(ciudad) for ciudad in results]
+    
+            return ciudades
+    except Exception as e:
+        print(f"[ERROR] Error al obtener ciudades del curso {curso_id}: {e}")
         return []  # Retorno seguro
 
 # ================================================================================
@@ -679,14 +709,37 @@ def agregar_curso(datos_curso: dict):
                 duracion_numero=datos_curso.get("duracion_numero"),
                 duracion_unidad=datos_curso.get("duracion_unidad"),
                 requisitos_ingreso=datos_curso.get("requisitos_ingreso"),
-                lugar=datos_curso.get("lugar"),
                 informacion=datos_curso.get("informacion"),
                 institucion_id=datos_curso.get("institucion_id")  # FK ya validada por constraints
+                # NOTA: El campo "lugar" fue removido, se maneja via relación many-to-many con ciudades
             )
             
             # === PERSISTENCIA ===
             session.add(nuevo_curso)
-            session.commit()  # Persistir en base de datos
+            session.commit()  # Persistir en base de datos para obtener el ID
+            
+            # === AGREGAR CIUDADES (relación many-to-many) ===
+            if "ciudades" in datos_curso and datos_curso["ciudades"]:
+                ciudades_nombres = datos_curso["ciudades"]
+                if not isinstance(ciudades_nombres, list):
+                    ciudades_nombres = [ciudades_nombres]
+                
+                # Buscar o crear las ciudades
+                for ciudad_nombre in ciudades_nombres:
+                    ciudad = session.exec(select(Ciudad).where(Ciudad.nombre == ciudad_nombre)).first()
+                    if not ciudad:
+                        # Crear la ciudad si no existe (especialmente para "Virtual")
+                        ciudad = Ciudad(nombre=ciudad_nombre)
+                        session.add(ciudad)
+                        session.commit()
+                        session.refresh(ciudad)
+                    
+                    # Crear el link entre curso y ciudad
+                    link = CursoCiudadLink(curso_id=nuevo_curso.id, ciudad_id=ciudad.id)
+                    session.add(link)
+                
+                session.commit()  # Persistir los links
+            
             print(f"[LOG] Curso agregado exitosamente: {datos_curso.get('nombre')}")
             
     except Exception as e:
@@ -762,6 +815,7 @@ def modificar_curso(curso_id: int, datos_curso: dict):
             if "informacion" in datos_curso:
                 curso.informacion = datos_curso["informacion"]
             # NOTA: No permitimos cambiar institucion_id por seguridad
+            # NOTA: El campo "lugar" ya no existe, se maneja via relación many-to-many con ciudades
 
             # === ACTUALIZAR CIUDADES (relación many-to-many) ===
             if "ciudades" in datos_curso:

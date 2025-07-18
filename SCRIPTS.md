@@ -6,7 +6,37 @@ Este documento describe todos los scripts de automatización incluidos en el pro
 
 ## 🚀 Scripts Principales
 
-### 1. `scripts/setup-env.sh` - Configuración de Entornos
+### 1. `scripts/check-docker-only.sh` - Verificación Docker Only ⚠️
+
+**Propósito**: Verifica que el proyecto se ejecute solo en Docker y previene el uso de Reflex nativo.
+
+**Uso**:
+```bash
+./scripts/check-docker-only.sh
+```
+
+**Funcionalidades**:
+- Verifica que Docker esté instalado y ejecutándose
+- Comprueba que docker-compose esté disponible
+- Valida archivos de configuración necesarios
+- Verifica que los puertos necesarios estén libres
+- Muestra advertencias si se intenta usar Reflex nativo
+
+**Verificaciones**:
+- ✅ Docker instalado y ejecutándose
+- ✅ docker-compose disponible
+- ✅ Archivos de configuración presentes
+- ✅ Puertos 3000, 8000, 5432 libres
+- ❌ Previene uso de `reflex run`
+
+**Mensajes de Error**:
+- Muestra advertencia clara si se intenta usar Reflex nativo
+- Proporciona comandos correctos para usar Docker
+- Enlaza a documentación relevante
+
+---
+
+### 2. `scripts/setup-env.sh` - Configuración de Entornos
 
 **Propósito**: Configura automáticamente el entorno de desarrollo o producción.
 

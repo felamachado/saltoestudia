@@ -22,8 +22,5 @@ RUN npm install --legacy-peer-deps
 # Exponer puerto 8000
 EXPOSE 8000
 
-# Asegurar que el script de sincronización tenga permisos
-RUN chmod +x /app/scripts/sync-database.sh
-
 # Comando para correr el backend en modo producción
 CMD ["sh", "-c", "reflex run --backend-host 0.0.0.0 --backend-port 8000 --backend-only"] 

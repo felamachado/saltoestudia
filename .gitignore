@@ -1,9 +1,17 @@
+.web
 
 !.env.example
 !data/.gitkeep
 # ========================================
 # =============================================================
 # GITIGNORE PARA SALTO ESTUDIA - MÁXIMA SEGURIDAD
+# 
+# ⚠️ ADVERTENCIA CRÍTICA: Este proyecto SOLO se ejecuta en Docker
+# NO ejecutes 'reflex run' directamente. Usa siempre:
+# docker compose -f docker-compose.desarrollo.yml up -d
+# 
+# Para más información, consulta DOCKER-ONLY.md
+# =============================================================
 # 🌐 NODE.JS Y FRONTEND
 # 🐍 PYTHON
 # 🐳 DOCKER Y CONTENEDORES
@@ -12,6 +20,9 @@
 # 📋 ARCHIVOS ESPECÍFICOS DEL PROYECTO
 # 📝 LOGS Y ARCHIVOS TEMPORALES
 # 🔍 ARCHIVOS DE TESTING Y DEBUG
+backups/
+test/
+cambios/
 # 🔑 CLAVES SSH ESPECÍFICAS - GITHUB ACTIONS
 # 🔒 ARCHIVOS CRÍTICOS DE SEGURIDAD
 # 🔧 ENTORNOS VIRTUALES

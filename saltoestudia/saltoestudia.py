@@ -2,6 +2,13 @@
 # ARCHIVO PRINCIPAL DE LA APLICACIÓN SALTO ESTUDIA
 # ================================================================================
 # 
+# ⚠️ ADVERTENCIA CRÍTICA: Este proyecto SOLO se ejecuta en Docker
+# 
+# NO ejecutes 'reflex run' directamente. Usa siempre:
+# docker compose -f docker-compose.desarrollo.yml up -d
+# 
+# Para más información, consulta DOCKER-ONLY.md
+# 
 # Este archivo es el punto de entrada principal del sistema Salto Estudia.
 # Define la configuración global de la aplicación Reflex y gestiona las importaciones
 # de todas las páginas del sistema.
@@ -16,6 +23,7 @@
 # - Backend: SQLModel + SQLite para persistencia
 # - Autenticación: bcrypt para hash de contraseñas
 # - Estado: Reflex State management para UI reactiva
+# - CONTAINERIZACIÓN: Docker obligatorio para ejecución
 # ================================================================================
 
 import reflex as rx

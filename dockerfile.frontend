@@ -20,11 +20,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Instalar dependencias de Node.js
 RUN npm install --legacy-peer-deps
 
-# Exportar frontend estático
-RUN reflex export --frontend-only
-
 # Exponer puerto 3000
 EXPOSE 3000
 
-# Comando para servir archivos estáticos
-CMD ["sh", "-c", "cd .web/build/client && python -m http.server 3000"] 
+# Comando para desarrollo - usar reflex run en lugar de export
+CMD ["reflex", "run", "--frontend-only"] 

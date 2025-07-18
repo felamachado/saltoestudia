@@ -16,63 +16,26 @@ ENV PYTHONPATH=/app
 # Variables de entorno para la base de datos
 ENV DATABASE_URL=sqlite:///./data/saltoestudia.db
 
-# Actualizar e instalar dependencias del sistema
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    unzip \
+# Instalar Node.js y unzip
+RUN apt-get update && apt-get install -y \
     curl \
-    gnupg \
-    netcat-openbsd \
-    git \
-    build-essential \
+    unzip \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar Node.js y npm (vía repositorio oficial de Debian)
-RUN apt-get update && apt-get install -y nodejs npm
-
-# Copia requirements.txt y instala dependencias de Python
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-
-# Copia todo el código de la aplicación
+# Copiar archivos del proyecto
 COPY . .
 
-# Crear directorios necesarios para Reflex
-RUN mkdir -p /app/data /app/.web /app/.states && \
-    chmod -R 755 /app/.web /app/.states
+# Instalar dependencias de Python
+RUN pip install --no-cache-dir -r requirements.txt
 
-# === BUILD TIME SETUP ===
+# Instalar dependencias de Node.js
+RUN npm install --legacy-peer-deps
 
-# 1. Inicializar Reflex
-RUN echo "⚙️ Inicializando Reflex..." && \
-    reflex init --loglevel info || echo "Reflex init completed"
+# Exponer puertos
+EXPOSE 3000 8000
 
-# 2. Verificar/crear directorios
-RUN echo "📁 Preparando directorios..." && \
-    mkdir -p /app/.web /app/.states /app/data && \
-    chmod -R 755 /app/.web /app/.states
-
-# 3. Crear tablas de base de datos
-RUN echo "🗄️ Creando tablas de la base de datos..." && \
-    python init_db.py
-
-# 4. Ejecutar seed para poblar datos
-RUN echo "🌱 Poblando la base de datos..." && \
-    python seed.py && \
-    echo "✅ Seed completado."
-
-# Asegurar permisos correctos
-RUN chmod 666 reflex.db 2>/dev/null || echo "No DB file yet" && \
-    chmod -R 755 /app
-
-# Exponer puertos para Traefik
-EXPOSE 3000
-EXPOSE 8000
-
-# === COMANDO DE PRODUCCIÓN ===
-# Frontend en puerto 3000, Backend en puerto 8000, modo DESARROLLO (para resolver WebSocket)
-CMD echo "🚀 Iniciando Salto Estudia..." && \
-    echo "   -> Frontend: http://localhost:3000" && \
-    echo "   -> Backend:  http://localhost:8000" && \
-    echo "   -> AG Grid: ✅ Implementado" && \
-    reflex run --backend-host 0.0.0.0 --backend-port 8000 --frontend-port 3000 
+# Comando por defecto (puede ser sobrescrito en docker-compose)
+CMD ["reflex", "run"] 

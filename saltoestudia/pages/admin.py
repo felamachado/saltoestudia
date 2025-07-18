@@ -272,32 +272,48 @@ def curso_form_dialog() -> rx.Component:
                             align_items="start", width="100%",
                         ),
                         
-                        # Campo Lugar (checkboxes de ciudades válidas, usando rx.foreach y toggle_ciudad)
+                        # Campo Ciudades - HABILITADO
                         rx.vstack(
-                            rx.text("Ciudad/es donde se dicta el curso", **ComponentStyle.FORM_LABEL),
-                            rx.box(
+                            rx.text("Ciudades donde se dicta el curso", **ComponentStyle.FORM_LABEL),
+                            rx.text(
+                                "Selecciona las ciudades donde se dicta este curso:",
+                                color="#6b7280",
+                                font_size="14px",
+                                margin_bottom="8px",
+                            ),
+                            rx.hstack(
                                 rx.foreach(
                                     State.form_ciudades_opciones,
-                                    lambda ciudad: rx.hstack(
-                                        rx.checkbox(
-                                            ciudad,
-                                            is_checked=State.form_ciudades.contains(ciudad),
-                                            on_change=lambda checked, c=ciudad: State.toggle_ciudad(c, checked),
-                                            mr="2"
+                                    lambda ciudad: rx.button(
+                                        ciudad,
+                                        on_click=State.toggle_ciudad_simple(ciudad),
+                                        bg=rx.cond(
+                                            State.form_ciudades.contains(ciudad),
+                                            "#3b82f6",
+                                            "#e5e7eb"
                                         ),
-                                        rx.text(ciudad),
-                                        align_items="center",
-                                        spacing="2"
+                                        color=rx.cond(
+                                            State.form_ciudades.contains(ciudad),
+                                            "white",
+                                            "#374151"
+                                        ),
+                                        _hover={
+                                            "bg": rx.cond(
+                                                State.form_ciudades.contains(ciudad),
+                                                "#2563eb",
+                                                "#d1d5db"
+                                            )
+                                        },
+                                        border_radius="6px",
+                                        padding="8px 16px",
+                                        font_size="14px",
+                                        font_family=theme.Typography.FONT_FAMILY,
+                                        margin="2px",
                                     )
                                 ),
-                                direction="column",
                                 spacing="2",
-                                width="100%"
-                            ),
-                            rx.cond(
-                                State.form_ciudades.length() == 0,
-                                rx.text("Debes seleccionar al menos una ciudad.", color="red"),
-                                None
+                                width="100%",
+                                flex_wrap="wrap",
                             ),
                             align_items="start", width="100%",
                         ),
@@ -738,7 +754,7 @@ def admin_content_desktop() -> rx.Component:
                         font_weight=theme.Typography.FONT_WEIGHTS["bold"],
                     ),
                     rx.cond(
-                        State.logged_in_user,
+                        State.user_authenticated & (State.logged_in_user is not None),
                         rx.text(
                             f"Institución: {State.logged_in_user.institucion_nombre}",
                             color=theme.Color.GRAY_900,
@@ -818,7 +834,7 @@ def admin_content_mobile() -> rx.Component:
                     text_align="center",
                 ),
                 rx.cond(
-                    State.logged_in_user,
+                    State.user_authenticated & (State.logged_in_user is not None),
                     rx.text(
                         f"Institución: {State.logged_in_user.institucion_nombre}",
                         color=theme.Color.GRAY_900,
@@ -884,9 +900,9 @@ def admin_content_mobile() -> rx.Component:
 @rx.page(route="/admin", on_load=[State.cargar_cursos_admin])
 def admin_page() -> rx.Component:
     """Página de administración para usuarios logueados."""
-    # Verificación de autenticación simplificada
+    # Verificación de autenticación más robusta
     return rx.cond(
-        State.logged_in_user,  # Verificación directa más simple
+        State.user_authenticated & (State.logged_in_user is not None),  # Verificación más robusta
         # Usuario autenticado - mostrar contenido admin responsive
         rx.box(
             rx.desktop_only(admin_content_desktop()),

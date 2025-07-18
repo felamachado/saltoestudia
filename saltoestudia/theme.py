@@ -231,6 +231,81 @@ STYLESHEET = {
     # Importar fuente moderna de Google Fonts
     "@import": "url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap')",
     
+    # Ocultar el footer "Built with Reflex" - SOLUCIÓN DEFINITIVA CON TÉCNICAS MODERNAS
+    "a[href*='reflex.dev']": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+        "position": "absolute !important",
+        "left": "-9999px !important",
+        "top": "-9999px !important",
+        "width": "0 !important",
+        "height": "0 !important",
+        "overflow": "hidden !important",
+        "clip": "rect(0, 0, 0, 0) !important",
+        "clip_path": "inset(50%) !important",
+    },
+    
+    # Selector por clase CSS específica
+    ".css-1qwptgo": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+        "position": "absolute !important",
+        "left": "-9999px !important",
+        "top": "-9999px !important",
+    },
+    
+    # Selector por posición fija en la esquina inferior derecha
+    "a[style*='position: fixed'][style*='bottom'][style*='right']": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+    },
+    
+    # Selector por z-index alto
+    "a[style*='z-index: 9998']": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+    },
+    
+    # Ocultar cualquier elemento que contenga el texto "Built with Reflex"
+    "*:contains('Built with Reflex')": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+    },
+    
+    # CSS más agresivo - ocultar elementos en la esquina inferior derecha
+    "body > a:last-child": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+    },
+    
+    # Ocultar elementos con posición fija que contengan "Reflex"
+    "a[style*='position: fixed']:has(*:contains('Reflex'))": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+    },
+    
+    # Usar CSS moderno para ocultar elementos específicos
+    "a:has(p:contains('Built with Reflex'))": {
+        "display": "none !important",
+        "visibility": "hidden !important",
+        "opacity": "0 !important",
+        "pointer_events": "none !important",
+    },
+    
     "body": {
         "background_color": Color.GRAY_100,  # Fondo oscuro
         "color": Color.GRAY_900,  # Texto claro
@@ -690,4 +765,40 @@ def create_course_table(headers: list, rows_data: list, render_row_func=None):
             rx.foreach(rows_data, render_row_func) if render_row_func else None
         ),
         **ComponentStyle.COURSE_TABLE,
-    ) 
+    )
+
+def create_ciudades_grid_css():
+    """Crea CSS personalizado para el grid de ciudades en 3 columnas."""
+    css_content = """
+    <style>
+        /* CSS para grid de ciudades en 3 columnas */
+        .ciudades-grid {
+            display: grid !important;
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 8px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        
+        /* Asegurar que los checkboxes se distribuyan correctamente */
+        .ciudades-grid > * {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        
+        /* Responsive: 2 columnas en tablets */
+        @media (max-width: 768px) {
+            .ciudades-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+        }
+        
+        /* Responsive: 1 columna en móviles */
+        @media (max-width: 480px) {
+            .ciudades-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
+    """
+    return rx.html(css_content) 

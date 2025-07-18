@@ -4,17 +4,27 @@ Plataforma educativa para la gestión de cursos e instituciones educativas en Sa
 
 ## 🚀 Inicio Rápido
 
+### ⚠️ IMPORTANTE: Este proyecto SOLO se ejecuta en Docker
+
+**Salto Estudia** está diseñado para ejecutarse exclusivamente en contenedores Docker. No se puede ejecutar Reflex nativo localmente debido a la configuración específica del proyecto.
+
+### 🎯 Logros Recientes
+
+**✅ Selección Múltiple de Ciudades Implementada** (18 Julio, 2025)
+- Funcionalidad completa de selección múltiple de ciudades en cursos
+- Preselección de ciudades asociadas al editar cursos
+- Feedback visual con botones interactivos
+- Persistencia correcta en base de datos
+- Ver detalles en [`cambios/2025-07-18_ciudades-seleccion-multiple-funcional.md`](cambios/2025-07-18_ciudades-seleccion-multiple-funcional.md)
+
 ### Opción 1: Script Automático (Recomendado)
 
 ```bash
 # Configurar entorno de desarrollo
 ./scripts/setup-env.sh desarrollo
 
-# Iniciar en modo Docker (recomendado)
+# Iniciar en Docker (ÚNICA opción disponible)
 ./scripts/start-project.sh docker
-
-# O iniciar en modo local
-./scripts/start-project.sh local
 
 # Ver ayuda
 ./scripts/start-project.sh help
@@ -27,7 +37,7 @@ Plataforma educativa para la gestión de cursos e instituciones educativas en Sa
 git clone <url-del-repositorio>
 cd saltoestudia
 
-# Iniciar la aplicación con Docker
+# Iniciar la aplicación con Docker (OBLIGATORIO)
 docker compose -f docker-compose.desarrollo.yml up -d --build
 ```
 
@@ -99,8 +109,24 @@ docker compose -f docker-compose.production.yml up -d
 - **Desarrollo**: Usa `docker-compose.desarrollo.yml` y `config-desarrollo.env`
 - **Producción**: Usa `docker-compose.production.yml` y `.env` con contraseñas seguras
 
-### ⚠️ Importante: Solo Docker
-Este proyecto se ejecuta **exclusivamente en Docker**. No se puede ejecutar Reflex nativo localmente.
+### ⚠️ CRÍTICO: Solo Docker - No Reflex Nativo
+
+**Este proyecto se ejecuta EXCLUSIVAMENTE en Docker.** 
+
+❌ **NO se puede ejecutar Reflex nativo localmente** debido a:
+- Configuración específica de base de datos en contenedores
+- Variables de entorno específicas de Docker
+- Dependencias y rutas configuradas para contenedores
+- Conflictos de puertos y recursos
+
+✅ **Siempre usar Docker:**
+```bash
+# ✅ CORRECTO - Usar Docker
+docker compose -f docker-compose.desarrollo.yml up -d
+
+# ❌ INCORRECTO - No usar Reflex nativo
+reflex run  # Esto causará errores
+```
 
 > **📋 Para información detallada sobre archivos necesarios y despliegue, consulta [`DEPLOYMENT.md`](DEPLOYMENT.md)**
 

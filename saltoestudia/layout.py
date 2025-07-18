@@ -511,6 +511,8 @@ def page_layout(*content):
         ),
         footer(),
         login_dialog(),
+        # CSS personalizado para el grid de ciudades
+        theme.create_ciudades_grid_css(),
         min_height="100vh",
         width="100%",
         align_items="center",

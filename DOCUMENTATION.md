@@ -6,10 +6,15 @@ Este documento sirve como índice central de toda la documentación del proyecto
 
 ## 🚀 Inicio Rápido
 
+### ⚠️ IMPORTANTE: Docker Only
+- **`DOCKER-ONLY.md`** - Documentación específica sobre ejecución solo en Docker
+- **`scripts/check-docker-only.sh`** - Script de verificación de configuración Docker
+
 ### Para Nuevos Desarrolladores
 1. **`README.md`** - Guía de inicio rápido
-2. **`ENTORNOS.md`** - Configuración de entornos
-3. **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
+2. **`DOCKER-ONLY.md`** - Restricciones de Docker (OBLIGATORIO)
+3. **`ENTORNOS.md`** - Configuración de entornos
+4. **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
 
 ### Para Despliegue
 1. **`DEPLOYMENT.md`** - Guía completa de despliegue

@@ -4,7 +4,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: dockerfile.frontend
+      dockerfile: dockerfile
     container_name: saltoestudia-dev-frontend
     restart: unless-stopped
     env_file: config-desarrollo.env
@@ -17,13 +17,14 @@ services:
       - saltoestudia-dev-net
     depends_on:
       - backend
+    command: ["reflex", "run", "--frontend-only"]
     labels:
       - "com.docker.compose.project=saltoestudia-dev"
 
   backend:
     build:
       context: .
-      dockerfile: dockerfile.backend
+      dockerfile: dockerfile
     container_name: saltoestudia-dev-backend
     restart: unless-stopped
     env_file: config-desarrollo.env
@@ -38,6 +39,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    command: ["reflex", "run", "--backend-only"]
     labels:
       - "com.docker.compose.project=saltoestudia-dev"
 
