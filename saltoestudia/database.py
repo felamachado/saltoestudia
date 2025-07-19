@@ -1312,23 +1312,33 @@ def obtener_institucion_por_id(institucion_id: int) -> Dict[str, Any]:
             "logo": "/logos/logo-cenur.png"
         }
     """
+    print(f"[DEBUG] obtener_institucion_por_id - Buscando institución con ID: {institucion_id}")
+    
     try:
         with Session(engine) as session:
             # Buscar la institución por ID
             institucion = session.exec(select(Institucion).where(Institucion.id == institucion_id)).first()
+            
             if not institucion:
                 print(f"[LOG] No se encontró la institución con ID {institucion_id}")
                 return {}
             
+            print(f"[DEBUG] Institución encontrada: {institucion.nombre}")
+            
             # Construir respuesta
-            return {
+            resultado = {
                 "id": institucion.id,
                 "nombre": institucion.nombre,
                 "logo": institucion.logo or "/logos/logoutu.png",
             }
             
+            print(f"[DEBUG] Datos de institución: {resultado}")
+            return resultado
+            
     except Exception as e:
         print(f"[ERROR] Error al obtener institución por ID: {e}")
+        import traceback
+        print(f"[DEBUG] Traceback: {traceback.format_exc()}")
         return {}
 
 def modificar_institucion(institucion_id: int, datos_institucion: dict):
@@ -1346,24 +1356,48 @@ def modificar_institucion(institucion_id: int, datos_institucion: dict):
         - nombre: Nombre de la institución
         - logo: Ruta al archivo de logo
     """
+    print(f"[DEBUG] modificar_institucion - Iniciando")
+    print(f"[DEBUG] ID de institución: {institucion_id}")
+    print(f"[DEBUG] Datos a modificar: {datos_institucion}")
+    
     try:
+        # Validaciones previas
+        if "nombre" in datos_institucion:
+            nombre = datos_institucion["nombre"]
+            print(f"[DEBUG] Validando nombre: '{nombre}'")
+            
+            if not nombre or not nombre.strip():
+                raise ValueError("El nombre de la institución no puede estar vacío")
+            if len(nombre.strip()) < 3:
+                raise ValueError("El nombre de la institución debe tener al menos 3 caracteres")
+            if len(nombre.strip()) > 200:
+                raise ValueError("El nombre de la institución es demasiado largo (máximo 200 caracteres)")
+        
         with Session(engine) as session:
             # Buscar la institución por ID
             institucion = session.exec(select(Institucion).where(Institucion.id == institucion_id)).first()
+            
             if not institucion:
+                print(f"[ERROR] No se encontró la institución con ID {institucion_id}")
                 raise ValueError(f"No se encontró la institución con ID {institucion_id}")
+            
+            print(f"[DEBUG] Institución encontrada: {institucion.nombre}")
             
             # Actualizar campos
             if "nombre" in datos_institucion:
-                institucion.nombre = datos_institucion["nombre"]
+                institucion.nombre = datos_institucion["nombre"].strip()
+                print(f"[LOG] Nombre actualizado: '{institucion.nombre}'")
             
             if "logo" in datos_institucion:
                 institucion.logo = datos_institucion["logo"]
+                print(f"[LOG] Logo actualizado: '{institucion.logo}'")
             
             # Guardar cambios
             session.commit()
-            print(f"[LOG] Institución modificada exitosamente: {institucion_id}")
+            print(f"[LOG] ✅ Institución modificada exitosamente: {institucion_id}")
             
     except Exception as e:
-        print(f"[ERROR] Error al modificar institución {institucion_id}: {e}")
+        print(f"[ERROR] ❌ Error al modificar institución {institucion_id}: {e}")
+        import traceback
+        print(f"[DEBUG] Traceback: {traceback.format_exc()}")
         raise

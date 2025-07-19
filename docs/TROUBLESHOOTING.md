@@ -326,3 +326,54 @@ fi
 ---
 
 **Nota:** Este documento debe actualizarse cada vez que se encuentre un nuevo error para mantener la prevención al 100%. 
+
+# Guía de Solución de Problemas - Salto Estudia
+
+## Problemas Comunes y Soluciones
+
+### 🔥 PROBLEMA CRÍTICO: Directorio .web con Permisos Incorrectos
+
+**Síntomas:**
+- Los cambios en el código no se reflejan en la web
+- Error: `PermissionError: [Errno 13] Permission denied: '.web/...'`
+- Reflex no puede inicializar el directorio web
+- Hot reload no funciona
+
+**Causa:**
+El directorio `.web` se crea con permisos de root cuando se ejecuta Reflex con sudo, causando conflictos de permisos que impiden que Reflex funcione correctamente.
+
+**Solución Completa:**
+
+```bash
+# 1. Detener todos los procesos de Reflex
+sudo pkill -f "reflex run"
+pkill -f "reflex run"
+
+# 2. Eliminar completamente el directorio .web problemático
+sudo rm -rf .web
+
+# 3. Corregir permisos del proyecto
+sudo chown -R felipe:felipe .
+
+# 4. Verificar que no existe .web
+ls -la .web 2>/dev/null || echo "✅ Directorio .web eliminado correctamente"
+
+# 5. Ejecutar Reflex como usuario normal (NO con sudo)
+reflex run
+```
+
+**Prevención:**
+- NUNCA ejecutar `sudo reflex run`
+- Siempre ejecutar `reflex run` como usuario normal
+- Si necesitas usar puertos privilegiados, usar `sudo reflex run --frontend-port 80` pero luego detener y ejecutar como usuario normal
+
+**Verificación:**
+```bash
+# Verificar que la aplicación funciona
+curl -s http://localhost:3000 | head -5
+
+# Verificar que el hot reload funciona
+# Hacer un cambio en cualquier archivo .py y verificar que se refleja automáticamente
+```
+
+### Otros Problemas Comunes 

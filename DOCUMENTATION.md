@@ -7,37 +7,35 @@ Este documento sirve como índice central de toda la documentación del proyecto
 ## 🚀 Inicio Rápido
 
 ### ⚠️ IMPORTANTE: Docker Only
-- **`DOCKER-ONLY.md`** - Documentación específica sobre ejecución solo en Docker
+- **`scripts/docker/DOCKER-ONLY.md`** - Documentación específica sobre ejecución solo en Docker
 - **`scripts/check-docker-only.sh`** - Script de verificación de configuración Docker
 
 ### Para Nuevos Desarrolladores
 1. **`README.md`** - Guía de inicio rápido
-2. **`DOCKER-ONLY.md`** - Restricciones de Docker (OBLIGATORIO)
-3. **`ENTORNOS.md`** - Configuración de entornos
-4. **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
+2. **`scripts/docker/DOCKER-ONLY.md`** - Restricciones de Docker (OBLIGATORIO)
+3. **`docs/DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
 
 ### Para Despliegue
-1. **`DEPLOYMENT.md`** - Guía completa de despliegue
-2. **`DEPLOY-VPS.md`** - Despliegue específico en VPS
-3. **`SCRIPTS.md`** - Scripts de automatización
+1. **`scripts/docker/DEPLOY-VPS.md`** - Despliegue específico en VPS
+2. **`SCRIPTS.md`** - Scripts de automatización
 
 ## 🏗️ Arquitectura y Diseño
 
 ### Documentación Técnica
-- **`ARCHITECTURE.md`** - Arquitectura completa del sistema
+- **`docs/ARCHITECTURE.md`** - Arquitectura completa del sistema
   - Patrones de diseño utilizados
   - Flujo de datos
   - Componentes principales
   - Tecnologías empleadas
 
-- **`COMPONENTS.md`** - Documentación detallada de componentes
+- **`docs/COMPONENTS.md`** - Documentación detallada de componentes
   - Módulos principales
   - Funciones específicas
   - Relaciones entre componentes
   - Ejemplos de uso
 
 ### Configuración del Sistema
-- **`CONFIGURATION.md`** - Configuración del sistema
+- **`docs/CONFIGURATION.md`** - Configuración del sistema
   - Variables de entorno
   - Archivos Docker
   - Configuración de Reflex
@@ -46,7 +44,7 @@ Este documento sirve como índice central de toda la documentación del proyecto
 ## 📊 Datos y Persistencia
 
 ### Gestión de Datos
-- **`DATA.md`** - Gestión de datos y migraciones
+- **`docs/DATA.md`** - Gestión de datos y migraciones
   - Estructura de base de datos
   - Scripts de seed
   - Migraciones con Alembic
@@ -64,13 +62,7 @@ Este documento sirve como índice central de toda la documentación del proyecto
 ## 🚀 Despliegue y Producción
 
 ### Guías de Despliegue
-- **`DEPLOYMENT.md`** - Guía completa de despliegue
-  - Requisitos del sistema
-  - Configuración de Docker
-  - Variables de entorno
-  - Verificación de despliegue
-
-- **`DEPLOY-VPS.md`** - Despliegue específico en VPS
+- **`scripts/docker/DEPLOY-VPS.md`** - Despliegue específico en VPS
   - Configuración de VPS Oracle Cloud
   - Traefik y SSL automático
   - Script de despliegue automatizado
@@ -79,30 +71,23 @@ Este documento sirve como índice central de toda la documentación del proyecto
 ## 🛠️ Desarrollo y Mantenimiento
 
 ### Workflow de Desarrollo
-- **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
+- **`docs/DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
   - Flujo de trabajo diario
   - Git workflow
   - Testing y debugging
   - Code review
 
-### Entornos
-- **`ENTORNOS.md`** - Configuración de entornos
-  - Desarrollo local
-  - Docker development
-  - Producción
-  - Cambio entre entornos
-
 ## 🛡️ Seguridad y Mantenimiento
 
 ### Seguridad
-- **`SECURITY.md`** - Seguridad del proyecto
+- **`docs/SECURITY.md`** - Seguridad del proyecto
   - Buenas prácticas
   - Auditoría de seguridad
   - Gestión de credenciales
   - Headers de seguridad
 
 ### Solución de Problemas
-- **`TROUBLESHOOTING.md`** - Solución de problemas
+- **`docs/TROUBLESHOOTING.md`** - Solución de problemas
   - Problemas comunes
   - Diagnóstico de errores
   - Soluciones paso a paso
@@ -111,7 +96,7 @@ Este documento sirve como índice central de toda la documentación del proyecto
 ## 📈 Historial y Cambios
 
 ### Control de Versiones
-- **`CHANGELOG.md`** - Historial de cambios
+- **`docs/CHANGELOG.md`** - Historial de cambios
   - Versiones del proyecto
   - Cambios importantes
   - Nuevas funcionalidades
@@ -121,56 +106,54 @@ Este documento sirve como índice central de toda la documentación del proyecto
 
 ### 👨‍💻 Desarrollador Frontend
 1. **`README.md`** - Inicio rápido
-2. **`COMPONENTS.md`** - Componentes de UI
-3. **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
-4. **`ENTORNOS.md`** - Configuración de entornos
+2. **`docs/COMPONENTS.md`** - Componentes de UI
+3. **`docs/DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
 
 ### 🔧 Desarrollador Backend
-1. **`ARCHITECTURE.md`** - Arquitectura del sistema
-2. **`DATA.md`** - Gestión de datos
-3. **`CONFIGURATION.md`** - Configuración del sistema
-4. **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
+1. **`docs/ARCHITECTURE.md`** - Arquitectura del sistema
+2. **`docs/DATA.md`** - Gestión de datos
+3. **`docs/CONFIGURATION.md`** - Configuración del sistema
+4. **`docs/DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
 
 ### 🚀 DevOps/Despliegue
-1. **`DEPLOYMENT.md`** - Guía de despliegue
-2. **`DEPLOY-VPS.md`** - Despliegue en VPS
-3. **`SCRIPTS.md`** - Scripts de automatización
-4. **`CONFIGURATION.md`** - Configuración del sistema
+1. **`scripts/docker/DEPLOY-VPS.md`** - Despliegue en VPS
+2. **`SCRIPTS.md`** - Scripts de automatización
+3. **`docs/CONFIGURATION.md`** - Configuración del sistema
 
 ### 🔍 Mantenimiento/Soporte
-1. **`TROUBLESHOOTING.md`** - Solución de problemas
+1. **`docs/TROUBLESHOOTING.md`** - Solución de problemas
 2. **`SCRIPTS.md`** - Scripts de diagnóstico
-3. **`SECURITY.md`** - Seguridad del proyecto
-4. **`DATA.md`** - Backup y recuperación
+3. **`docs/SECURITY.md`** - Seguridad del proyecto
+4. **`docs/DATA.md`** - Backup y recuperación
 
 ### 📊 Arquitecto/Lead
-1. **`ARCHITECTURE.md`** - Arquitectura completa
-2. **`COMPONENTS.md`** - Componentes del sistema
-3. **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
-4. **`CHANGELOG.md`** - Historial de cambios
+1. **`docs/ARCHITECTURE.md`** - Arquitectura completa
+2. **`docs/COMPONENTS.md`** - Componentes del sistema
+3. **`docs/DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
+4. **`docs/CHANGELOG.md`** - Historial de cambios
 
 ## 🔄 Flujo de Documentación
 
 ### Para Nuevos Features
-1. **Planificación**: `ARCHITECTURE.md`
-2. **Desarrollo**: `DEVELOPMENT-WORKFLOW.md`
-3. **Testing**: `TROUBLESHOOTING.md`
-4. **Despliegue**: `DEPLOYMENT.md`
-5. **Documentación**: Actualizar `COMPONENTS.md`
+1. **Planificación**: `docs/ARCHITECTURE.md`
+2. **Desarrollo**: `docs/DEVELOPMENT-WORKFLOW.md`
+3. **Testing**: `docs/TROUBLESHOOTING.md`
+4. **Despliegue**: `scripts/docker/DEPLOY-VPS.md`
+5. **Documentación**: Actualizar `docs/COMPONENTS.md`
 
 ### Para Bug Fixes
-1. **Diagnóstico**: `TROUBLESHOOTING.md`
-2. **Desarrollo**: `DEVELOPMENT-WORKFLOW.md`
-3. **Testing**: `TROUBLESHOOTING.md`
-4. **Despliegue**: `DEPLOYMENT.md`
-5. **Documentación**: Actualizar `CHANGELOG.md`
+1. **Diagnóstico**: `docs/TROUBLESHOOTING.md`
+2. **Desarrollo**: `docs/DEVELOPMENT-WORKFLOW.md`
+3. **Testing**: `docs/TROUBLESHOOTING.md`
+4. **Despliegue**: `scripts/docker/DEPLOY-VPS.md`
+5. **Documentación**: Actualizar `docs/CHANGELOG.md`
 
 ### Para Despliegues
-1. **Preparación**: `DEPLOYMENT.md`
-2. **Configuración**: `CONFIGURATION.md`
+1. **Preparación**: `scripts/docker/DEPLOY-VPS.md`
+2. **Configuración**: `docs/CONFIGURATION.md`
 3. **Ejecución**: `SCRIPTS.md`
-4. **Verificación**: `DEPLOY-VPS.md`
-5. **Monitoreo**: `TROUBLESHOOTING.md`
+4. **Verificación**: `scripts/docker/DEPLOY-VPS.md`
+5. **Monitoreo**: `docs/TROUBLESHOOTING.md`
 
 ## 📊 Métricas de Documentación
 

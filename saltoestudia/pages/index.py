@@ -63,7 +63,7 @@ def index() -> rx.Component:
             rx.box(
                 # Contenido principal
                 rx.vstack(
-                    rx.heading("¡Bienvenidos!", size="9", color=theme.Color.BLUE_300),
+                    rx.heading("¡Bienvenidos! - CAMBIO TEST", size="9", color=theme.Color.BLUE_300),
                     rx.text(
                         "En Salto Estudia vas a poder encontrar la oferta educativa local que mejor se adapta a vos.",
                         size="4",

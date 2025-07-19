@@ -34,6 +34,7 @@
 import reflex as rx
 import bcrypt
 from typing import List, Dict, Any, Optional
+from pathlib import Path
 from .database import (
     obtener_instituciones,
     obtener_instituciones_nombres,
@@ -220,6 +221,7 @@ class State(rx.State):
     # Campos para editar información de la institución
     form_institucion_nombre: str = ""                    # Campo nombre de la institución
     form_institucion_logo: str = ""                      # Campo logo de la institución
+    uploaded_files: List[str] = []                       # Lista de archivos subidos
     
     # === DATOS DE LA INSTITUCIÓN ACTUAL ===
     institucion_actual: Dict[str, Any] = {}              # Datos de la institución del usuario logueado
@@ -1076,13 +1078,42 @@ class State(rx.State):
 
     def cargar_institucion_actual(self):
         """Carga los datos de la institución del usuario logueado."""
+        print(f"[DEBUG] cargar_institucion_actual - Iniciando")
+        print(f"[DEBUG] Usuario logueado: {self.logged_in_user is not None}")
+        
         if self.logged_in_user:
-            from .database import obtener_institucion_por_id
-            self.institucion_actual = obtener_institucion_por_id(self.logged_in_user.institucion_id)
-            # También cargar ciudades para el formulario de sedes
-            self.cargar_ciudades_nombres()
+            print(f"[DEBUG] ID de institución del usuario: {self.logged_in_user.institucion_id}")
+            try:
+                from .database import obtener_institucion_por_id
+                self.institucion_actual = obtener_institucion_por_id(self.logged_in_user.institucion_id)
+                print(f"[DEBUG] Datos de institución cargados: {self.institucion_actual}")
+                
+                # Cargar datos en el formulario
+                self.form_institucion_nombre = self.institucion_actual.get("nombre", "")
+                print(f"[DEBUG] Nombre cargado en formulario: '{self.form_institucion_nombre}'")
+                
+                # Si hay logo actual, mostrarlo
+                logo_actual = self.institucion_actual.get("logo", "")
+                if logo_actual:
+                    self.form_institucion_logo = logo_actual
+                    print(f"[DEBUG] Logo cargado en formulario: '{self.form_institucion_logo}'")
+                else:
+                    print("[DEBUG] No hay logo actual")
+                
+                # También cargar ciudades para el formulario de sedes
+                self.cargar_ciudades_nombres()
+                print("[DEBUG] Ciudades cargadas")
+                
+            except Exception as e:
+                print(f"[ERROR] Error al cargar institución: {e}")
+                import traceback
+                print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+                self.institucion_actual = {}
         else:
+            print("[DEBUG] No hay usuario logueado")
             self.institucion_actual = {}
+        
+        print(f"[DEBUG] cargar_institucion_actual - Completado")
 
     def _reset_institucion_form_fields(self):
         """Limpia los campos del formulario de institución."""
@@ -1111,13 +1142,33 @@ class State(rx.State):
             return rx.window_alert("Error: No hay usuario autenticado.")
 
         # Validar campos obligatorios
-        if not self.form_institucion_nombre.strip():
+        nombre_limpio = self.form_institucion_nombre.strip()
+        if not nombre_limpio:
             return rx.window_alert("Error: El nombre de la institución es obligatorio.")
+        
+        # Validar longitud del nombre
+        if len(nombre_limpio) < 3:
+            return rx.window_alert("Error: El nombre de la institución debe tener al menos 3 caracteres.")
+        
+        if len(nombre_limpio) > 200:
+            return rx.window_alert("Error: El nombre de la institución es demasiado largo (máximo 200 caracteres).")
 
+        # Validar logo si se proporcionó
+        logo_limpio = self.form_institucion_logo.strip() if self.form_institucion_logo.strip() else None
+        if logo_limpio:
+            # Verificar que el archivo existe
+            if logo_limpio.startswith("/uploads/"):
+                from pathlib import Path
+                logo_path = Path("assets") / logo_limpio.lstrip("/")
+                if not logo_path.exists():
+                    print(f"⚠️ Archivo de logo no encontrado: {logo_path}")
+                    # No cancelar la operación, solo usar el logo actual
+                    logo_limpio = self.institucion_actual.get("logo", None)
+        
         # Construir el diccionario de datos de la institución
         institucion_data = {
-            "nombre": self.form_institucion_nombre.strip(),
-            "logo": self.form_institucion_logo.strip() if self.form_institucion_logo.strip() else None,
+            "nombre": nombre_limpio,
+            "logo": logo_limpio,
         }
 
         try:
@@ -1125,18 +1176,20 @@ class State(rx.State):
             institucion_id = self.logged_in_user.institucion_id
             from .database import modificar_institucion
             modificar_institucion(institucion_id, institucion_data)
-            print(f"Institución modificada con ID: {institucion_id}")
+            print(f"✅ Institución modificada con ID: {institucion_id}")
             
-            # Recargar datos de la institución y cerrar el diálogo
+            # Recargar datos de la institución
             self.cargar_institucion_actual()
-            self.cerrar_dialogo_institucion()
+            
+            # Forzar recarga del cache para que los cambios se vean inmediatamente
+            self.forzar_recarga_cache()
             
             # Mostrar mensaje de éxito
-            return rx.window_alert("Información de la institución actualizada correctamente.")
+            return rx.window_alert("✅ Información de la institución actualizada correctamente.")
 
         except Exception as e:
-            print(f"Error al guardar la institución: {e}")
-            return rx.window_alert(f"No se pudo guardar la información: {e}")
+            print(f"❌ Error al guardar la institución: {e}")
+            return rx.window_alert(f"❌ No se pudo guardar la información: {str(e)}")
 
     # Setters para los campos del formulario de institución
     def set_form_institucion_nombre(self, value: str):
@@ -1146,3 +1199,195 @@ class State(rx.State):
     def set_form_institucion_logo(self, value: str):
         """Setter para el campo logo de la institución."""
         self.form_institucion_logo = value
+    
+    async def handle_file_upload(self, files):
+        """Maneja la subida de archivos usando rx.upload."""
+        print(f"[DEBUG] Archivos recibidos: {files}")
+        print(f"[DEBUG] Tipo de files: {type(files)}")
+        
+        if not files:
+            return rx.window_alert("No se seleccionó ningún archivo")
+        
+        # Verificar autenticación
+        if not self.logged_in_user:
+            print("[ERROR] Usuario no autenticado para subir archivo")
+            return rx.window_alert("Error: Debes estar autenticado para subir archivos")
+        
+        file = files[0]
+        print(f"[DEBUG] Archivo a procesar: {file}")
+        print(f"[DEBUG] Tipo de file: {type(file)}")
+        print(f"[DEBUG] Atributos de file: {dir(file)}")
+        
+        try:
+            # Guardar en assets/uploads/logos/ que es donde Reflex sirve archivos estáticos
+            import os
+            from pathlib import Path
+            upload_dir = Path("assets/uploads/logos")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Generar nombre único
+            import uuid
+            from pathlib import Path
+            import io
+            
+            # Obtener extensión del archivo
+            if hasattr(file, 'filename'):
+                file_extension = Path(file.filename).suffix
+            elif hasattr(file, 'name'):
+                file_extension = Path(file.name).suffix
+            else:
+                file_extension = '.png'
+            
+            unique_filename = f"logo_{uuid.uuid4().hex[:8]}{file_extension}"
+            file_path = upload_dir / unique_filename
+            
+            # MÚLTIPLES ENFOQUES PARA LEER EL ARCHIVO
+            content = None
+            
+            # Enfoque 1: Intentar usar file.content directamente
+            if hasattr(file, 'content'):
+                print("[DEBUG] Usando file.content directamente")
+                content = file.content
+            # Enfoque 2: Intentar file.read() como bytes
+            elif hasattr(file, 'read'):
+                try:
+                    print("[DEBUG] Intentando file.read()")
+                    if hasattr(file, '__aiter__') or hasattr(file, '__await__'):
+                        # Es un objeto async
+                        content = await file.read()
+                    else:
+                        # Es un objeto síncrono
+                        content = file.read()
+                except Exception as read_error:
+                    print(f"[DEBUG] Error en file.read(): {read_error}")
+                    content = None
+            # Enfoque 3: Intentar acceder como bytes directamente
+            elif hasattr(file, '__bytes__'):
+                print("[DEBUG] Usando __bytes__")
+                content = bytes(file)
+            # Enfoque 4: Intentar como string y convertir
+            elif hasattr(file, '__str__'):
+                try:
+                    print("[DEBUG] Usando __str__ y convirtiendo")
+                    content = str(file).encode('utf-8')
+                except:
+                    content = None
+            
+            if content is None:
+                raise Exception("No se pudo leer el contenido del archivo con ningún método")
+            
+            # Guardar el archivo
+            with open(file_path, "wb") as f:
+                f.write(content)
+            
+            # Generar la URL correcta para el archivo subido
+            # En Reflex, los archivos en assets/ se sirven automáticamente
+            logo_url = f"/uploads/logos/{unique_filename}"
+            self.form_institucion_logo = logo_url
+            
+            print(f"✅ Archivo guardado en: {file_path}")
+            print(f"✅ URL del logo: {logo_url}")
+            print(f"✅ Tamaño del archivo: {len(content)} bytes")
+            
+            # Guardar automáticamente en la base de datos
+            try:
+                from .database import modificar_institucion
+                institucion_data = {
+                    "nombre": self.form_institucion_nombre or self.institucion_actual.get("nombre", ""),
+                    "logo": logo_url,
+                }
+                institucion_id = self.logged_in_user.institucion_id
+                modificar_institucion(institucion_id, institucion_data)
+                
+                # Actualizar datos de la institución en el estado
+                self.cargar_institucion_actual()
+                
+                print(f"✅ Logo guardado automáticamente en la base de datos")
+                
+            except Exception as e:
+                print(f"⚠️ Error al guardar logo en BD: {e}")
+                # No mostrar error al usuario, solo log
+                # El archivo se subió correctamente, pero no se guardó en BD
+            
+            return rx.window_alert("¡Imagen subida exitosamente!")
+            
+        except Exception as e:
+            print(f"❌ Error al subir archivo: {e}")
+            import traceback
+            print(f"[DEBUG] Traceback completo: {traceback.format_exc()}")
+            return rx.window_alert(f"Error al subir el archivo: {str(e)}")
+
+    def limpiar_logo(self):
+        """Limpia el logo seleccionado."""
+        self.form_institucion_logo = ""
+        return rx.window_alert("Logo eliminado")
+
+    def handle_institucion_form_submit(self, form_data: dict):
+        """Maneja el envío del formulario de institución usando rx.form."""
+        print(f"[DEBUG] handle_institucion_form_submit - Iniciando")
+        print(f"[DEBUG] Usuario autenticado: {self.logged_in_user is not None}")
+        
+        if not self.logged_in_user:
+            print("[ERROR] Usuario no autenticado")
+            return rx.window_alert("Error: No hay usuario autenticado.")
+        
+        print(f"[DEBUG] Form data recibido: {form_data}")
+        
+        # Extraer datos del formulario (solo nombre, el logo se maneja por separado)
+        nombre = form_data.get("institucion_nombre", "").strip()
+        
+        print(f"[DEBUG] Nombre extraído: '{nombre}'")
+        
+        # Validar nombre obligatorio
+        if not nombre:
+            print("[ERROR] Nombre vacío")
+            return rx.window_alert("Error: El nombre de la institución es obligatorio.")
+        
+        if len(nombre) < 3:
+            print("[ERROR] Nombre muy corto")
+            return rx.window_alert("Error: El nombre debe tener al menos 3 caracteres.")
+        
+        if len(nombre) > 200:
+            print("[ERROR] Nombre muy largo")
+            return rx.window_alert("Error: El nombre es demasiado largo (máximo 200 caracteres).")
+        
+        # Actualizar el nombre en el estado
+        self.form_institucion_nombre = nombre
+        
+        # Usar el logo actual (manejado por rx.upload)
+        logo_url = self.form_institucion_logo
+        
+        print(f"[DEBUG] Logo URL: '{logo_url}'")
+        print(f"[DEBUG] ID de institución: {self.logged_in_user.institucion_id}")
+        
+        # Construir datos para guardar en la base de datos
+        institucion_data = {
+            "nombre": nombre,
+            "logo": logo_url,
+        }
+        
+        print(f"[DEBUG] Datos a guardar: {institucion_data}")
+        
+        try:
+            # Guardar en la base de datos
+            from .database import modificar_institucion
+            institucion_id = self.logged_in_user.institucion_id
+            modificar_institucion(institucion_id, institucion_data)
+            
+            print(f"✅ Institución modificada: {nombre}")
+            
+            # Actualizar datos de la institución en el estado
+            self.cargar_institucion_actual()
+            
+            # Forzar recarga del cache
+            self.forzar_recarga_cache()
+            
+            print("[DEBUG] handle_institucion_form_submit - Completado exitosamente")
+            return rx.window_alert("✅ Información de la institución actualizada correctamente.")
+            
+        except Exception as e:
+            print(f"❌ Error al guardar: {e}")
+            print(f"[DEBUG] Tipo de error: {type(e)}")
+            import traceback
+            print(f"[DEBUG] Traceback: {traceback.format_exc()}")
+            return rx.window_alert(f"❌ Error al guardar los cambios: {str(e)}")

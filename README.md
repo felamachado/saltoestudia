@@ -70,18 +70,16 @@ Una vez iniciada, la aplicación estará disponible en:
 
 - **`DOCUMENTATION.md`** - Índice completo de toda la documentación
 - **`README.md`** - Esta guía de inicio rápido
-- **`ARCHITECTURE.md`** - Arquitectura completa del sistema
-- **`COMPONENTS.md`** - Documentación detallada de componentes
-- **`CONFIGURATION.md`** - Configuración del sistema
-- **`DATA.md`** - Gestión de datos y migraciones
+- **`docs/ARCHITECTURE.md`** - Arquitectura completa del sistema
+- **`docs/COMPONENTS.md`** - Documentación detallada de componentes
+- **`docs/CONFIGURATION.md`** - Configuración del sistema
+- **`docs/DATA.md`** - Gestión de datos y migraciones
 - **`SCRIPTS.md`** - Scripts de automatización
-- **`DEPLOYMENT.md`** - Guía completa de despliegue
-- **`DEPLOY-VPS.md`** - Despliegue específico en VPS
-- **`ENTORNOS.md`** - Configuración de entornos
-- **`DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
-- **`TROUBLESHOOTING.md`** - Solución de problemas
-- **`SECURITY.md`** - Seguridad del proyecto
-- **`CHANGELOG.md`** - Historial de cambios
+- **`docs/DEVELOPMENT-WORKFLOW.md`** - Workflow de desarrollo
+- **`docs/TROUBLESHOOTING.md`** - Solución de problemas
+- **`docs/SECURITY.md`** - Seguridad del proyecto
+- **`docs/CHANGELOG.md`** - Historial de cambios
+- **`scripts/docker/DEPLOY-VPS.md`** - Despliegue específico en VPS
 
 ## 🔧 Configuración Automática
 
@@ -138,7 +136,7 @@ docker compose -f docker-compose.desarrollo.yml up -d
 reflex run  # Esto causará errores
 ```
 
-> **📋 Para información detallada sobre archivos necesarios y despliegue, consulta [`DEPLOYMENT.md`](DEPLOYMENT.md)**
+> **📋 Para información detallada sobre archivos necesarios y despliegue, consulta [`scripts/docker/DEPLOY-VPS.md`](scripts/docker/DEPLOY-VPS.md)**
 
 ## 📊 Base de Datos
 
@@ -195,6 +193,37 @@ docker compose -f docker-compose.desarrollo.yml up -d --build
 ```
 
 ## 🐛 Solución de Problemas
+
+### ⚡ Problema Crítico: Cambios No Se Ven en la Web
+
+**Síntomas**: Los cambios en el código no se reflejan en la web, hot reload no funciona.
+
+**Solución Automática**:
+```bash
+# Script que soluciona automáticamente el problema
+./scripts/fix-web-permissions.sh
+
+# Luego ejecutar Reflex
+reflex run
+```
+
+**Solución Manual**:
+```bash
+# 1. Detener procesos
+sudo pkill -f "reflex run"
+pkill -f "reflex run"
+
+# 2. Eliminar .web problemático
+sudo rm -rf .web
+
+# 3. Corregir permisos
+sudo chown -R $(whoami):$(whoami) .
+
+# 4. Ejecutar Reflex
+reflex run
+```
+
+**Causa**: El directorio `.web` se crea con permisos de root cuando se ejecuta `sudo reflex run`.
 
 ### La aplicación no carga datos
 

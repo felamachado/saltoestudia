@@ -17,7 +17,7 @@ services:
       - saltoestudia-dev-net
     depends_on:
       - backend
-    command: ["reflex", "run", "--frontend-only"]
+    command: ["reflex", "run"]
     labels:
       - "com.docker.compose.project=saltoestudia-dev"
 
@@ -39,7 +39,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["reflex", "run", "--backend-only"]
+    command: ["reflex", "run"]
     labels:
       - "com.docker.compose.project=saltoestudia-dev"
 

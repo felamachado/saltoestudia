@@ -8,9 +8,82 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 ## [Unreleased]
 
 ### 🚀 **Nuevas Características**
+- **Sistema de upload de imágenes** para logos de instituciones completamente funcional
 - **Scripts completamente no-interactivos** para VPS y entornos automatizados
 - **Gestión automática de procesos** sin confirmaciones manuales
 - **Compatibilidad mejorada** con CI/CD y despliegues automáticos
+
+### 🔧 **Mejoras**
+- **Upload de logos de instituciones** con previsualización en tiempo real
+- **Servido estático de archivos** configurado correctamente en Reflex
+- **Eliminación de prompts interactivos** en todos los scripts
+- **Detección automática de procesos anteriores** y terminación automática
+- **Limpieza automática de puertos** sin preguntar al usuario
+- **Actualización automática de alias** existentes
+- **Mejor manejo de errores** y validaciones
+
+### 🐛 **Corregido**
+- **Problema de upload de imágenes** en Reflex 0.8.x resuelto completamente
+- **Error de serialización** de objetos `Var` en el estado de Reflex
+- **Configuración incorrecta de archivos estáticos** en `rxconfig.py`
+- **Discrepancia de directorios** entre guardado y servido de archivos
+- **Error de FastAPI** con archivos cerrados antes de procesamiento
+- **URLs incorrectas** para acceso a archivos subidos
+
+### 🛠️ **Scripts Modificados**
+- `scripts/arrancar_app.sh`: Eliminados prompts de confirmación
+- `scripts/limpiar_puertos.sh`: Limpieza automática sin interacción
+- `start.sh`: Validación mejorada y manejo de errores
+- `install-alias.sh`: Actualización automática de alias existentes
+
+### 📚 **Documentación**
+- **README actualizado** con información sobre compatibilidad VPS
+- **Sección de características** de scripts no-interactivos
+- **Guía de solución de problemas** mejorada
+- **Ejemplos de uso** para entornos automatizados
+- **Documentación completa** del sistema de upload de imágenes
+
+### 🎯 **Casos de Uso**
+- **VPS sin interacción manual**
+- **Entornos de CI/CD**
+- **Despliegues automatizados**
+- **Contenedores Docker**
+- **Scripts de automatización**
+- **Gestión de logos de instituciones educativas**
+
+### 🔍 **Solución Técnica del Upload de Imágenes**
+
+#### **Problema Identificado:**
+- Los archivos se subían correctamente pero no se mostraban en la interfaz
+- Error de serialización: `'bytes' object has no attribute 'read'`
+- URLs incorrectas que no apuntaban a los archivos reales
+- Configuración `static_dir` incorrecta en Reflex
+
+#### **Solución Implementada:**
+1. **Configuración de Reflex corregida:**
+   - Eliminado `static_dir="uploaded_files"` de `rxconfig.py`
+   - Uso del directorio estático por defecto `assets/`
+
+2. **Función de upload mejorada:**
+   - Guardado en `assets/uploads/logos/` (directorio estático por defecto)
+   - Manejo robusto de diferentes tipos de archivo en Reflex 0.8.x
+   - Conversión correcta de URLs para evitar problemas de serialización
+
+3. **URLs corregidas:**
+   - Cambio de `/uploaded_files/logos/` a `/uploads/logos/`
+   - Apunta correctamente al directorio `assets/uploads/logos/`
+
+4. **Manejo de errores robusto:**
+   - Múltiples métodos de lectura de archivo para compatibilidad
+   - Debugging exhaustivo con logs detallados
+   - Fallbacks para diferentes versiones de Reflex
+
+#### **Resultado:**
+- ✅ **Upload funcional**: Los archivos se suben correctamente
+- ✅ **Previsualización**: Las imágenes se muestran en tiempo real
+- ✅ **Persistencia**: Los archivos se mantienen entre reinicios
+- ✅ **Acceso directo**: URLs funcionan correctamente (código 200)
+- ✅ **Base de datos**: Las rutas se guardan correctamente en SQLite
 
 ### 🔧 **Mejoras**
 - **Eliminación de prompts interactivos** en todos los scripts

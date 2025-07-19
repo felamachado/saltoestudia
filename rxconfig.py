@@ -215,5 +215,8 @@ config = rx.Config(
             "strictPort": True,
             "cors": True
         }
-    }
+    },
+    # Configuración de archivos estáticos para servir uploads
+    # En Reflex, los archivos se sirven automáticamente desde assets/
+    # No necesitamos static_dir, usamos assets/ como directorio estático por defecto
 )

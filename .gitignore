@@ -5,11 +5,11 @@
 # ========================================
 # =============================================================
 # GITIGNORE PARA SALTO ESTUDIA - MÁXIMA SEGURIDAD
-# 
+#
 # ⚠️ ADVERTENCIA CRÍTICA: Este proyecto SOLO se ejecuta en Docker
 # NO ejecutes 'reflex run' directamente. Usa siempre:
 # docker compose -f docker-compose.desarrollo.yml up -d
-# 
+#
 # Para más información, consulta DOCKER-ONLY.md
 # =============================================================
 # 🌐 NODE.JS Y FRONTEND

@@ -157,7 +157,37 @@ Este documento describe todos los scripts de automatización incluidos en el pro
 
 ---
 
-### 4. `scripts/verify-production-setup.sh` - Verificación de Producción
+### 4. `scripts/fix-web-permissions.sh` - Solución de Permisos .web ⚡
+
+**Propósito**: Soluciona automáticamente problemas de permisos del directorio .web en Reflex.
+
+**Uso**:
+```bash
+./scripts/fix-web-permissions.sh
+```
+
+**Problema que Soluciona**:
+- Permisos incorrectos en directorio .web
+- Hot reload no funciona
+- Cambios no se reflejan en la web
+- Errores de PermissionError en .web
+
+**Proceso**:
+1. **Detiene procesos**: Termina todos los procesos de Reflex
+2. **Elimina .web**: Borra completamente el directorio problemático
+3. **Corrige permisos**: Restaura permisos correctos del proyecto
+4. **Verifica**: Confirma que el problema está solucionado
+
+**Uso Recomendado**:
+```bash
+# Cuando los cambios no se ven en la web
+./scripts/fix-web-permissions.sh
+reflex run
+```
+
+---
+
+### 5. `scripts/verify-production-setup.sh` - Verificación de Producción
 
 **Propósito**: Verifica que la configuración de producción sea correcta.
 
